@@ -690,7 +690,7 @@ func extractRegularFile(
 	header *tar.Header, tarReader *tar.Reader, sourcePath, targetPath string, destPerms fs.FileMode,
 ) error {
 	if destPerms == 0 {
-		destPerms = fs.FileMode( //nolint:gosec // (G115) tar's Mode won't(?) overflow fs.FileMode
+		destPerms = fs.FileMode(
 			header.Mode,
 		) & fs.ModePerm
 	}
