@@ -37,7 +37,7 @@ func FprintImportInfo(
 	if err != nil {
 		return errors.Wrapf(err, "couldn't resolve import group %s", imp.Name)
 	}
-	resolved.Pallet, err = fplt.MergeFSPallet(resolved.Pallet, cache, nil)
+	resolved.Pallet, _, err = fplt.MergeFSPallet(resolved.Pallet, cache, nil)
 	if err != nil {
 		return errors.Wrapf(
 			err, "couldn't print merge pallet referenced by resolved import group %s", imp.Name,

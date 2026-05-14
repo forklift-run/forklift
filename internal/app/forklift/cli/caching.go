@@ -36,8 +36,7 @@ func CacheAllReqs(
 }
 
 func CacheStagingReqs(
-	indent int, pallet *fplt.FSPallet, mirrorsCache ffs.Pather,
-	palletCache caching.PathedPalletCache,
+	indent int, pallet *fplt.FSPallet, mirrorsCache ffs.Pather, palletCache caching.PathedPalletCache,
 	dlCache *caching.FSDownloadCache,
 	platform string, includeDisabled, parallel bool,
 ) (merged *fplt.FSPallet, palletCacheWithMerged *caching.LayeredPalletCache, err error) {
@@ -50,7 +49,7 @@ func CacheStagingReqs(
 		return nil, nil, err
 	}
 
-	if merged, err = fplt.MergeFSPallet(pallet, palletCache, nil); err != nil {
+	if merged, _, err = fplt.MergeFSPallet(pallet, palletCache, nil); err != nil {
 		return nil, nil, errors.Wrap(
 			err, "couldn't merge pallet with file imports from any pallets required by it",
 		)

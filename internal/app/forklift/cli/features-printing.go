@@ -36,7 +36,7 @@ func FprintFeatureInfo(
 		Import: imp,
 		Pallet: pallet,
 	}
-	resolved.Pallet, err = fplt.MergeFSPallet(resolved.Pallet, cache, nil)
+	resolved.Pallet, _, err = fplt.MergeFSPallet(resolved.Pallet, cache, nil)
 	if err != nil {
 		return errors.Wrapf(
 			err, "couldn't print merge pallet referenced by feature %s resolved as import group %s",

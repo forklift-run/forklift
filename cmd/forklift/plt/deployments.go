@@ -13,7 +13,7 @@ import (
 
 func lsDeplAction(c *cli.Context) error {
 	plt, _, err := processFullBaseArgs(c.String("workspace"), processingOptions{
-		merge: true,
+		mergePallet: true,
 	})
 	if err != nil {
 		return err
@@ -26,28 +26,27 @@ func lsDeplAction(c *cli.Context) error {
 
 func showDeplAction(c *cli.Context) error {
 	plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{
-		merge: true,
+		mergePallet: true,
 	})
 	if err != nil {
 		return err
 	}
 
-	return fcli.FprintDeplInfo(0, os.Stdout, plt, caches.pp, c.Args().First())
+	return fcli.FprintDeplInfo(0, os.Stdout, plt, caches.pmp, c.Args().First())
 }
 
 // locate-depl-pkg
 
 func locateDeplPkgAction(c *cli.Context) error {
 	plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{
-		merge: true,
+		mergePallet: true,
 	})
 	if err != nil {
 		return err
 	}
 
-	// FIXME: make this account for pallet layering! Do the same for `dev plt`.
 	return fcli.FprintDeplPkgLocation(
-		0, os.Stdout, plt, caches.pp, c.Args().First(), c.Bool("allow-disabled"),
+		0, os.Stdout, plt, caches.pmp, c.Args().First(), c.Bool("allow-disabled"),
 	)
 }
 
@@ -57,7 +56,7 @@ func addDeplAction(versions Versions) cli.ActionFunc {
 	return func(c *cli.Context) error {
 		plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{
 			requirePalletCache: true,
-			merge:              true,
+			mergePallet:        true,
 		})
 		if err != nil {
 			return err
@@ -71,7 +70,7 @@ func addDeplAction(versions Versions) cli.ActionFunc {
 		deplName := c.Args().Slice()[0]
 		pkgPath := c.Args().Slice()[1]
 		if err = fcli.AddDepl(
-			0, plt, caches.pp, deplName, pkgPath, c.StringSlice("feat"), c.Bool("disabled"),
+			0, plt, caches.pmp, deplName, pkgPath, c.StringSlice("feat"), c.Bool("disabled"),
 			c.Bool("force"),
 		); err != nil {
 			return err
@@ -95,13 +94,13 @@ func delDeplAction(versions Versions) cli.ActionFunc {
 	return func(c *cli.Context) error {
 		plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{
 			requirePalletCache: true,
-			merge:              true,
+			mergePallet:        true,
 		})
 		if err != nil {
 			return err
 		}
 		if err = fcli.CheckDeepCompat(
-			plt, caches.pp, versions.Core(), c.Bool("ignore-tool-version"),
+			plt, caches.pmp, versions.Core(), c.Bool("ignore-tool-version"),
 		); err != nil {
 			return err
 		}
@@ -128,7 +127,7 @@ func setDeplPkgAction(versions Versions) cli.ActionFunc {
 	return func(c *cli.Context) error {
 		plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{
 			requirePalletCache: true,
-			merge:              true,
+			mergePallet:        true,
 		})
 		if err != nil {
 			return err
@@ -141,7 +140,7 @@ func setDeplPkgAction(versions Versions) cli.ActionFunc {
 
 		deplName := c.Args().Slice()[0]
 		pkgPath := c.Args().Slice()[1]
-		if err = fcli.SetDeplPkg(0, plt, caches.pp, deplName, pkgPath, c.Bool("force")); err != nil {
+		if err = fcli.SetDeplPkg(0, plt, caches.pmp, deplName, pkgPath, c.Bool("force")); err != nil {
 			return err
 		}
 
@@ -163,7 +162,7 @@ func addDeplFeatAction(versions Versions) cli.ActionFunc {
 	return func(c *cli.Context) error {
 		plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{
 			requirePalletCache: true,
-			merge:              true,
+			mergePallet:        true,
 		})
 		if err != nil {
 			return err
@@ -177,7 +176,7 @@ func addDeplFeatAction(versions Versions) cli.ActionFunc {
 		deplName := c.Args().Slice()[0]
 		features := c.Args().Slice()[1:]
 		if err = fcli.AddDeplFeat(
-			0, plt, caches.pp, deplName, features, c.Bool("force"),
+			0, plt, caches.pmp, deplName, features, c.Bool("force"),
 		); err != nil {
 			return err
 		}
@@ -200,7 +199,7 @@ func delDeplFeatAction(versions Versions) cli.ActionFunc {
 	return func(c *cli.Context) error {
 		plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{
 			requirePalletCache: true,
-			merge:              true,
+			mergePallet:        true,
 		})
 		if err != nil {
 			return err
@@ -235,7 +234,7 @@ func setDeplDisabledAction(versions Versions, setting bool) cli.ActionFunc {
 	return func(c *cli.Context) error {
 		plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{
 			requirePalletCache: true,
-			merge:              true,
+			mergePallet:        true,
 		})
 		if err != nil {
 			return err

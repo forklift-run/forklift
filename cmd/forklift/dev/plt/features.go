@@ -14,7 +14,7 @@ func lsFeatAction(c *cli.Context) error {
 	plt, _, err := processFullBaseArgs(c, processingOptions{
 		requirePalletCache: true,
 		enableOverrides:    true,
-		merge:              true,
+		mergePallet:        true,
 	})
 	if err != nil {
 		return err
@@ -29,7 +29,7 @@ func showFeatAction(c *cli.Context) error {
 	plt, caches, err := processFullBaseArgs(c, processingOptions{
 		requirePalletCache: true,
 		enableOverrides:    true,
-		merge:              true,
+		mergePallet:        true,
 	})
 	if err != nil {
 		return err

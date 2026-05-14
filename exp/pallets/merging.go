@@ -15,18 +15,19 @@ import (
 )
 
 // MergeFSPallet creates a new FSPallet with a virtual (read-only) filesystem created by evaluating
-// the pallet's file imports with its required pallets (which should be loadable using the provided
-// loader).
+// the specified pallet's file imports with its required pallets (which should be loadable using the
+// provided loader). It also returns a map of the result of merging each pallet (keyed by pallet
+// paths) required directly or indirectly by the specified pallet.
 func MergeFSPallet(
 	shallow *FSPallet, palletLoader FSPalletLoader, prohibitedPallets structures.Set[string],
-) (merged *FSPallet, err error) {
+) (merged *FSPallet, mergedPallets map[string]*FSPallet, err error) {
 	merged = &FSPallet{
 		Pallet:    shallow.Pallet,
 		FSPkgTree: shallow.FSPkgTree,
 	}
 	imports, err := shallow.LoadImports("**/*")
 	if err != nil {
-		return nil, errors.Wrapf(err, "couldn't check for import groups")
+		return nil, nil, errors.Wrapf(err, "couldn't check for import groups")
 	}
 	hasEnabledImports := false
 	for _, imp := range imports {
@@ -37,29 +38,29 @@ func MergeFSPallet(
 	}
 	if !hasEnabledImports { // base case for recursive merging
 		// fmt.Printf("No need to merge pallet %s!\n", shallow.Path())
-		return shallow, nil
+		return shallow, nil, nil
 	}
 
 	// fmt.Printf("Merging pallet %s...\n", shallow.Path())
 	allResolved, err := ResolveImports(shallow, palletLoader, imports)
 	if err != nil {
-		return nil, errors.Wrapf(err, "couldn't resolve import groups")
+		return nil, nil, errors.Wrapf(err, "couldn't resolve import groups")
 	}
 	allProhibitedPallets := make(structures.Set[string])
 	maps.Copy(prohibitedPallets, allProhibitedPallets)
 	allProhibitedPallets.Add(shallow.Path())
-	palletFileMappings, pallets, err := evaluatePalletImports( // recursive step for merging
+	palletFileMappings, mergedPallets, err := evaluatePalletImports( // recursive step for merging
 		allResolved, palletLoader, prohibitedPallets,
 	)
 	if err != nil {
-		return nil, errors.Wrap(
+		return nil, nil, errors.Wrap(
 			err, "couldn't evaluate import groups for imports from required pallets",
 		)
 	}
 
-	underlayRefs, err := mergePalletImports(palletFileMappings, pallets)
+	underlayRefs, err := mergePalletImports(palletFileMappings, mergedPallets)
 	if err != nil {
-		return nil, errors.Wrap(err, "couldn't merge file imports across all required pallets")
+		return nil, nil, errors.Wrap(err, "couldn't merge file imports across all required pallets")
 	}
 	// fmt.Printf("Merging file imports into %s:\n", shallow.Path())
 	// for _, target := range sortKeys(underlayRefs) {
@@ -69,7 +70,11 @@ func MergeFSPallet(
 	merged.FS = ffs.NewMergeFS(shallow.FS, underlayRefs)
 	merged.FSPkgTree.FS = merged.FS
 	// fmt.Printf("Merged pallet %s!\n", shallow.Path())
-	return merged, nil
+	// fmt.Printf(
+	// 	"%s depends directly or indirectly on %+v\n",
+	// 	shallow.Path(), slices.Collect(maps.Keys(mergedPallets)),
+	// )
+	return merged, mergedPallets, nil
 }
 
 // evaluatePalletImports splits up a flat list of ResolvedImports into a map from pallet paths to
@@ -78,9 +83,9 @@ func MergeFSPallet(
 func evaluatePalletImports(
 	allResolved []*ResolvedImport, palletLoader FSPalletLoader,
 	prohibitedPallets structures.Set[string],
-) (palletFileMappings map[string]map[string]string, pallets map[string]*FSPallet, err error) {
+) (palletFileMappings map[string]map[string]string, mergedPallets map[string]*FSPallet, err error) {
 	resolvedByPallet := make(map[string][]*ResolvedImport) // pallet path -> imports from that pallet
-	pallets = make(map[string]*FSPallet)                   // pallet path -> pallet
+	mergedPallets = make(map[string]*FSPallet)             // pallet path -> pallet
 	for _, resolved := range allResolved {
 		palletPath := resolved.Pallet.Path()
 		if prohibitedPallets.Has(palletPath) {
@@ -91,21 +96,23 @@ func evaluatePalletImports(
 			)
 		}
 		resolvedByPallet[palletPath] = append(resolvedByPallet[palletPath], resolved)
-		pallets[palletPath] = resolved.Pallet
+		mergedPallets[palletPath] = resolved.Pallet
 	}
 
-	for palletPath, pallet := range pallets {
+	for palletPath, pallet := range mergedPallets {
 		// Note: if we find that recursively merging pallets is computationally expensive, we can cache
 		// the results of merging pallets. However, correctly caching merged pallets to/from disk adds
 		// nontrivial complexity due to the need to decide when to invalidate cache entries, so for now
 		// we don't implement any caching.
-		if pallets[palletPath], err = MergeFSPallet(
+		var upstreamMerged map[string]*FSPallet
+		if mergedPallets[palletPath], upstreamMerged, err = MergeFSPallet(
 			pallet, palletLoader, prohibitedPallets,
 		); err != nil {
 			return nil, nil, errors.Wrapf(
 				err, "couldn't compute merged pallet for required pallet %s", palletPath,
 			)
 		}
+		maps.Copy(mergedPallets, upstreamMerged)
 	}
 
 	palletFileMappings = make(map[string]map[string]string) // pallet path -> target -> source
@@ -114,7 +121,7 @@ func evaluatePalletImports(
 		for _, resolved := range palletResolved {
 			mergedPalletResolved = append(mergedPalletResolved, &ResolvedImport{
 				Import: resolved.Import,
-				Pallet: pallets[palletPath],
+				Pallet: mergedPallets[palletPath],
 			})
 		}
 		if palletFileMappings[palletPath], err = consolidatePalletImports(
@@ -125,11 +132,11 @@ func evaluatePalletImports(
 			)
 		}
 	}
-	return palletFileMappings, pallets, nil
+	return palletFileMappings, mergedPallets, nil
 }
 
 // consolidatePalletImports checks the import groups loaded for a single required pallet and
-// consolidates into a single mapping between target paths and source paths relative to the
+// consolidates them into a single mapping between target paths and source paths relative to the
 // required pallet.
 func consolidatePalletImports(
 	imports []*ResolvedImport, loader FSPalletLoader,

@@ -50,7 +50,7 @@ func GetRequiredPallet(
 			requiredPalletPath, version,
 		)
 	}
-	mergedPallet, err := fplt.MergeFSPallet(cachedPallet, cache, nil)
+	mergedPallet, _, err := fplt.MergeFSPallet(cachedPallet, cache, nil)
 	if err != nil {
 		return nil, errors.Wrapf(
 			err, "couldn't merge pallet %s with file imports from any pallets required by it",

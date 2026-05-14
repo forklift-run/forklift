@@ -121,7 +121,6 @@ func (c *FSPalletCache) LoadFSPkg(pkgPath string, version string) (*fpkg.FSPkg, 
 			continue
 		}
 
-		// FIXME: we must merge the pallet first!
 		pkg, err := pallet.LoadFSPkg(pkgSubdir)
 		if err != nil {
 			return nil, errors.Wrapf(
@@ -196,16 +195,16 @@ func (c *FSPalletCache) loadFSPalletContaining(
 // The sub-directory path does not have to actually exist.
 // In the loaded FSPallet's embedded [Pallet], the version is *not* initialized.
 func loadFSPalletContaining(fsys ffs.PathedFS, subdirPath string) (*fplt.FSPallet, error) {
-	repoCandidatePath := subdirPath
+	palletCandidatePath := subdirPath
 	for {
-		if repo, err := fplt.LoadFSPallet(fsys, repoCandidatePath); err == nil {
-			return repo, nil
+		if pallet, err := fplt.LoadFSPallet(fsys, palletCandidatePath); err == nil {
+			return pallet, nil
 		}
-		repoCandidatePath = path.Dir(repoCandidatePath)
-		if repoCandidatePath == "/" || repoCandidatePath == "." {
+		palletCandidatePath = path.Dir(palletCandidatePath)
+		if palletCandidatePath == "/" || palletCandidatePath == "." {
 			// we can't go up anymore!
 			return nil, errors.Errorf(
-				"no repo declaration file was found in any parent directory of %s", subdirPath,
+				"no pallet declaration file was found in any parent directory of %s", subdirPath,
 			)
 		}
 	}

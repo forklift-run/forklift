@@ -14,7 +14,7 @@ import (
 
 func lsFileAction(c *cli.Context) error {
 	plt, _, err := processFullBaseArgs(c.String("workspace"), processingOptions{
-		merge: true,
+		mergePallet: true,
 	})
 	if err != nil {
 		return err
@@ -39,7 +39,7 @@ func lsFileAction(c *cli.Context) error {
 
 func locateFileAction(c *cli.Context) error {
 	plt, _, err := processFullBaseArgs(c.String("workspace"), processingOptions{
-		merge: true,
+		mergePallet: true,
 	})
 	if err != nil {
 		return err
@@ -57,7 +57,7 @@ func locateFileAction(c *cli.Context) error {
 
 func showFileAction(c *cli.Context) error {
 	plt, _, err := processFullBaseArgs(c.String("workspace"), processingOptions{
-		merge: true,
+		mergePallet: true,
 	})
 	if err != nil {
 		return err
@@ -70,7 +70,7 @@ func showFileAction(c *cli.Context) error {
 
 func editFileAction(c *cli.Context) error {
 	plt, _, err := processFullBaseArgs(c.String("workspace"), processingOptions{
-		merge: true,
+		mergePallet: true,
 	})
 	if err != nil {
 		return err
@@ -83,7 +83,7 @@ func editFileAction(c *cli.Context) error {
 
 func delFileAction(c *cli.Context) error {
 	plt, _, err := processFullBaseArgs(c.String("workspace"), processingOptions{
-		merge: true,
+		mergePallet: true,
 	})
 	if err != nil {
 		return err

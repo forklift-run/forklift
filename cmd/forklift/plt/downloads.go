@@ -14,13 +14,13 @@ import (
 
 func lsDlAction(c *cli.Context) error {
 	plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{
-		merge: true,
+		mergePallet: true,
 	})
 	if err != nil {
 		return err
 	}
 
-	http, oci, err := forklift.ListRequiredDownloads(plt, caches.pp, c.Bool("include-disabled"))
+	http, oci, err := forklift.ListRequiredDownloads(plt, caches.pmp, c.Bool("include-disabled"))
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func cacheDlAction(versions Versions) cli.ActionFunc {
 	return func(c *cli.Context) error {
 		plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{
 			requirePalletCache: true,
-			merge:              true,
+			mergePallet:        true,
 		})
 		if err != nil {
 			return err
@@ -51,7 +51,7 @@ func cacheDlAction(versions Versions) cli.ActionFunc {
 		}
 
 		if err := fcli.DownloadExportFiles(
-			0, plt, caches.pp, caches.d, c.String("platform"), false, c.Bool("parallel"),
+			0, plt, caches.pmp, caches.d, c.String("platform"), false, c.Bool("parallel"),
 		); err != nil {
 			return err
 		}

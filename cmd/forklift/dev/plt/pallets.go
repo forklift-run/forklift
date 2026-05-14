@@ -18,16 +18,17 @@ import (
 )
 
 type workspaceCaches struct {
-	m  *caching.FSMirrorCache
-	p  *caching.LayeredPalletCache
-	pp *caching.LayeredPalletCache
-	d  *caching.FSDownloadCache
+	m   *caching.FSMirrorCache
+	p   *caching.LayeredPalletCache
+	pm  *caching.MergedFSPalletCache
+	pmp *caching.LayeredPalletCache
+	d   *caching.FSDownloadCache
 }
 
 func (c workspaceCaches) staging() fcli.StagingCaches {
 	return fcli.StagingCaches{
 		Mirrors:   c.m,
-		Pallets:   c.p,
+		Pallets:   c.pm,
 		Downloads: c.d,
 	}
 }
@@ -36,7 +37,7 @@ type processingOptions struct {
 	requirePalletCache   bool
 	requireDownloadCache bool
 	enableOverrides      bool
-	merge                bool
+	mergePallet          bool
 }
 
 func processFullBaseArgs(
@@ -55,7 +56,7 @@ func processFullBaseArgs(
 	}
 	caches.p = &caching.LayeredPalletCache{}
 	if caches.p.Underlay, err = forklift.GetPalletCache(
-		wpath, plt, opts.requirePalletCache || opts.merge,
+		wpath, plt, opts.requirePalletCache || opts.mergePallet,
 	); err != nil {
 		return nil, workspaceCaches{}, err
 	}
@@ -66,14 +67,15 @@ func processFullBaseArgs(
 			return nil, workspaceCaches{}, err
 		}
 	}
-	if opts.merge {
-		if plt, err = fplt.MergeFSPallet(plt, caches.p, nil); err != nil {
+	caches.pm = caching.NewMergedFSPalletCache(caches.p)
+	if opts.mergePallet {
+		if plt, _, err = fplt.MergeFSPallet(plt, caches.pm, nil); err != nil {
 			return nil, workspaceCaches{}, errors.Wrap(
 				err, "couldn't merge development pallet with file imports from any pallets required by it",
 			)
 		}
 	}
-	if caches.pp, err = forklift.MakeOverlayCache(plt, caches.p); err != nil {
+	if caches.pmp, err = forklift.MakeOverlayCache(plt, caches.pm); err != nil {
 		return nil, workspaceCaches{}, errors.Wrap(
 			err, "couldn't make overlay of development pallet with pallet cache",
 		)
@@ -183,7 +185,7 @@ func cacheAllAction(versions Versions) cli.ActionFunc {
 		}
 
 		if err = fcli.CacheAllReqs(
-			0, plt, caches.m, caches.p, caches.d,
+			0, plt, caches.m, caches.pm, caches.d,
 			c.String("platform"), c.Bool("include-disabled"), c.Bool("parallel"),
 		); err != nil {
 			return err
@@ -210,7 +212,7 @@ func checkAction(versions Versions) cli.ActionFunc {
 		plt, caches, err := processFullBaseArgs(c, processingOptions{
 			requirePalletCache: true,
 			enableOverrides:    true,
-			merge:              true,
+			mergePallet:        true,
 		})
 		if err != nil {
 			return err
@@ -221,7 +223,7 @@ func checkAction(versions Versions) cli.ActionFunc {
 			return err
 		}
 
-		if _, _, err := fcli.Check(0, plt, caches.pp); err != nil {
+		if _, _, err := fcli.Check(0, plt, caches.pmp); err != nil {
 			return err
 		}
 		return nil
@@ -235,7 +237,7 @@ func planAction(versions Versions) cli.ActionFunc {
 		plt, caches, err := processFullBaseArgs(c, processingOptions{
 			requirePalletCache: true,
 			enableOverrides:    true,
-			merge:              true,
+			mergePallet:        true,
 		})
 		if err != nil {
 			return err
@@ -246,7 +248,7 @@ func planAction(versions Versions) cli.ActionFunc {
 			return err
 		}
 
-		if _, _, err = fcli.Plan(0, plt, caches.pp, c.Bool("parallel")); err != nil {
+		if _, _, err = fcli.Plan(0, plt, caches.pmp, c.Bool("parallel")); err != nil {
 			return err
 		}
 		return nil
@@ -457,7 +459,7 @@ func addPltAction(versions Versions) cli.ActionFunc {
 				return err
 			}
 			if _, _, err = fcli.CacheStagingReqs(
-				0, plt, caches.m, caches.p, caches.d, c.String("platform"), false, c.Bool("parallel"),
+				0, plt, caches.m, caches.pm, caches.d, c.String("platform"), false, c.Bool("parallel"),
 			); err != nil {
 				return err
 			}

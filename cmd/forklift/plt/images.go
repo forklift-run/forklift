@@ -14,13 +14,13 @@ import (
 
 func lsImgAction(c *cli.Context) error {
 	plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{
-		merge: true,
+		mergePallet: true,
 	})
 	if err != nil {
 		return err
 	}
 
-	images, err := forklift.ListRequiredImages(plt, caches.pp, c.Bool("include-disabled"))
+	images, err := forklift.ListRequiredImages(plt, caches.pmp, c.Bool("include-disabled"))
 	if err != nil {
 		return err
 	}
@@ -36,7 +36,7 @@ func cacheImgAction(versions Versions) cli.ActionFunc {
 	return func(c *cli.Context) error {
 		plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{
 			requirePalletCache: true,
-			merge:              true,
+			mergePallet:        true,
 		})
 		if err != nil {
 			return err
@@ -49,7 +49,7 @@ func cacheImgAction(versions Versions) cli.ActionFunc {
 
 		fmt.Fprintln(os.Stderr, "Downloading Docker container images specified by the local pallet...")
 		if err := fcli.DownloadImages(
-			0, plt, caches.pp, c.String("platform"), c.Bool("include-disabled"), c.Bool("parallel"),
+			0, plt, caches.pmp, c.String("platform"), c.Bool("include-disabled"), c.Bool("parallel"),
 		); err != nil {
 			return err
 		}

@@ -183,7 +183,7 @@ func describePalletImports(
 		requiredPallets[resolved.Pallet.Path()] = resolved.Pallet
 	}
 	for palletPath, requiredPallet := range requiredPallets {
-		if requiredPallets[palletPath], err = fplt.MergeFSPallet(
+		if requiredPallets[palletPath], _, err = fplt.MergeFSPallet(
 			requiredPallet, palletCache, nil,
 		); err != nil {
 			return nil, errors.Wrapf(

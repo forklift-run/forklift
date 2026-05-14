@@ -13,13 +13,13 @@ import (
 func lsPkgAction(c *cli.Context) error {
 	plt, caches, err := processFullBaseArgs(c, processingOptions{
 		enableOverrides: true,
-		merge:           true,
+		mergePallet:     true,
 	})
 	if err != nil {
 		return err
 	}
 
-	return fcli.FprintPalletPkgs(0, os.Stdout, plt, caches.pp)
+	return fcli.FprintPalletPkgs(0, os.Stdout, plt, caches.pmp)
 }
 
 // locate-pkg
@@ -27,13 +27,13 @@ func lsPkgAction(c *cli.Context) error {
 func locatePkgAction(c *cli.Context) error {
 	plt, caches, err := processFullBaseArgs(c, processingOptions{
 		enableOverrides: true,
-		merge:           true,
+		mergePallet:     true,
 	})
 	if err != nil {
 		return err
 	}
 
-	return fcli.FprintPkgLocation(os.Stdout, plt, caches.pp, c.Args().First())
+	return fcli.FprintPkgLocation(os.Stdout, plt, caches.pmp, c.Args().First())
 }
 
 // show-pkg
@@ -41,11 +41,11 @@ func locatePkgAction(c *cli.Context) error {
 func showPkgAction(c *cli.Context) error {
 	plt, caches, err := processFullBaseArgs(c, processingOptions{
 		enableOverrides: true,
-		merge:           true,
+		mergePallet:     true,
 	})
 	if err != nil {
 		return err
 	}
 
-	return fcli.FprintPkgInfo(0, os.Stdout, plt, caches.pp, c.Args().First())
+	return fcli.FprintPkgInfo(0, os.Stdout, plt, caches.pmp, c.Args().First())
 }

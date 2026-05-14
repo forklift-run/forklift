@@ -57,7 +57,7 @@ func FprintRequiredPalletInfo(
 		)
 	}
 	// We must merge the required pallet to get an accurate list of its deployments & packages:
-	mergedPallet, err := fplt.MergeFSPallet(cachedPallet, cache, nil)
+	mergedPallet, _, err := fplt.MergeFSPallet(cachedPallet, cache, nil)
 	if err != nil {
 		return errors.Wrapf(
 			err, "couldn't merge pallet %s with file imports from any pallets required by it",
