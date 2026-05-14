@@ -270,6 +270,7 @@ func FprintDeplPkgLocation(
 	if resolved.Decl.Disabled && !allowDisabled {
 		return errors.Errorf("package deployment %s is not enabled!", depl.Name)
 	}
+	// FIXME: make this account for pallet layering!
 	_, _ = fmt.Fprintln(out, resolved.Pkg.FS.Path())
 	return nil
 }

@@ -61,6 +61,8 @@ func NewMergeFS(overlay PathedFS, underlayRefs map[string]FileRef) *MergeFS {
 // Resolve returns the path of the named file from the overlay (if it exists in the overlay), or
 // else from an underlay filesystem depending on which one is recorded to have that file.
 func (f *MergeFS) Resolve(name string) (string, error) {
+	// FIXME: if the underlay filesystem is itself an overlay filesystem (e.g. with a
+	// transitively-included file), we need to drill down into its underlays to get the correct path!
 	ref, err := f.GetFileRef(name)
 	if err != nil {
 		return "", err

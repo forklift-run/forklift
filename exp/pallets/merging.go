@@ -47,6 +47,7 @@ func MergeFSPallet(
 		return nil, nil, errors.Wrapf(err, "couldn't resolve import groups")
 	}
 	allProhibitedPallets := make(structures.Set[string])
+	// FIXME(ethanjli): did I accidentally flip the order of the map.Copy args?
 	maps.Copy(prohibitedPallets, allProhibitedPallets)
 	allProhibitedPallets.Add(shallow.Path())
 	palletFileMappings, mergedPallets, err := evaluatePalletImports( // recursive step for merging
