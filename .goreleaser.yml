@@ -110,8 +110,8 @@ dockers:
     dockerfile: "Dockerfile"
     use: buildx
     image_templates:
-    - "ghcr.io/planktoscope/forklift:latest-amd64"
-    - "ghcr.io/planktoscope/forklift:{{ .Version }}-amd64"
+    - "ghcr.io/forklift-run/forklift:latest-amd64"
+    - "ghcr.io/forklift-run/forklift:{{ .Version }}-amd64"
     build_flag_templates:
     - "--pull"
     - "--platform=linux/amd64"
@@ -128,8 +128,8 @@ dockers:
     use: buildx
     goarch: arm64
     image_templates:
-    - "ghcr.io/planktoscope/forklift:latest-arm64v8"
-    - "ghcr.io/planktoscope/forklift:{{ .Version }}-arm64v8"
+    - "ghcr.io/forklift-run/forklift:latest-arm64v8"
+    - "ghcr.io/forklift-run/forklift:{{ .Version }}-arm64v8"
     build_flag_templates:
     - "--pull"
     - "--platform=linux/arm64/v8"
@@ -147,8 +147,8 @@ dockers:
     goarch: arm
     goarm: 7
     image_templates:
-    - "ghcr.io/planktoscope/forklift:latest-armv7"
-    - "ghcr.io/planktoscope/forklift:{{ .Version }}-armv7"
+    - "ghcr.io/forklift-run/forklift:latest-armv7"
+    - "ghcr.io/forklift-run/forklift:{{ .Version }}-armv7"
     build_flag_templates:
     - "--pull"
     - "--platform=linux/arm/v7"
@@ -161,13 +161,13 @@ dockers:
 
 docker_manifests:
   # forklift
-  - name_template: "ghcr.io/planktoscope/forklift:latest"
+  - name_template: "ghcr.io/forklift-run/forklift:latest"
     image_templates:
-      - "ghcr.io/planktoscope/forklift:latest-amd64"
-      - "ghcr.io/planktoscope/forklift:latest-arm64v8"
-      - "ghcr.io/planktoscope/forklift:latest-armv7"
-  - name_template: "ghcr.io/planktoscope/forklift:{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
+      - "ghcr.io/forklift-run/forklift:latest-amd64"
+      - "ghcr.io/forklift-run/forklift:latest-arm64v8"
+      - "ghcr.io/forklift-run/forklift:latest-armv7"
+  - name_template: "ghcr.io/forklift-run/forklift:{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
     image_templates:
-      - "ghcr.io/planktoscope/forklift:{{ .Version }}-amd64"
-      - "ghcr.io/planktoscope/forklift:{{ .Version }}-arm64v8"
-      - "ghcr.io/planktoscope/forklift:{{ .Version }}-armv7"
+      - "ghcr.io/forklift-run/forklift:{{ .Version }}-amd64"
+      - "ghcr.io/forklift-run/forklift:{{ .Version }}-arm64v8"
+      - "ghcr.io/forklift-run/forklift:{{ .Version }}-armv7"
