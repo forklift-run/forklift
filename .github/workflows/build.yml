@@ -40,7 +40,7 @@ jobs:
           path: coverage.*
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v7.0.0
+        uses: codecov/codecov-action@v7.1.1
         with:
           file: ./coverage.out
           flags: ${{ runner.os }}
@@ -53,7 +53,7 @@ jobs:
           fetch-depth: 0
 
       - name: Free up disk space
-        uses: jlumbroso/free-disk-space@v1.3.1
+        uses: jlumbroso/free-disk-space@v2.0.0
         with:
           large-packages: false
           docker-images: false
