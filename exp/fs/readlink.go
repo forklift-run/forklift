@@ -22,6 +22,7 @@ type ReadLinkFS interface {
 // ReadLink returns the destination of the named symbolic link.
 //
 // If fsys does not implement ReadLinkFS, then ReadLink returns an error.
+// TODO: replace this with [fs.ReadLink].
 func ReadLink(fsys fs.FS, name string) (string, error) {
 	if fsys, ok := fsys.(ReadLinkFS); ok {
 		return fsys.ReadLink(name)

@@ -534,8 +534,10 @@ func (de *importedDirEntry) Info() (fs.FileInfo, error) {
 // impliedDirEntry
 
 // An impliedDirEntry is a [fs.DirEntry] for a directory whose existence is implied by one or
-// more underlays of a [MergeFS], but which does not necessarily exist in an underlay and does not
-// not necessarily have a unique source among the underlays.
+// more underlays of a [MergeFS] or children of a [UnionFS], but which (for a MergeFS) does not
+// necessarily exist in an underlay or (for a UnionFS) is not necessarily located at the specified
+// name, and (for a MergeFS) which does not not necessarily have a unique source among
+// the underlays.
 type impliedDirEntry struct {
 	// Name is the name of the implied directory described by the entry; it's only the final element
 	// of the path (the base name), not the entire path.

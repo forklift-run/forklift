@@ -17,19 +17,26 @@ import (
 // MergedFSPalletCache is a [PathedPalletCache] implementation with copies of pallets stored in a
 // [fpkg.PathedFS] filesystem.
 type MergedFSPalletCache struct {
-	shallowCache  PathedPalletCache
-	mergedPallets map[string]*fplt.FSPallet
-	mergedPkgTree *fpkg.FSPkgTree
+	shallowCache    PathedPalletCache
+	mergedPallets   map[string]*fplt.FSPallet
+	mergedPkgTreeFS *ffs.UnionFS
+	mergedPkgTree   *fpkg.FSPkgTree
 }
 
 // MergedFSPalletCache
 
 func NewMergedFSPalletCache(shallowCache PathedPalletCache) *MergedFSPalletCache {
+	mergedPkgTreeFS := &ffs.UnionFS{
+		RootPath: shallowCache.Path(),
+		Children: make(map[string]ffs.PathedFS),
+	}
 	return &MergedFSPalletCache{
-		shallowCache:  shallowCache,
-		mergedPallets: make(map[string]*fplt.FSPallet),
+		shallowCache:    shallowCache,
+		mergedPallets:   make(map[string]*fplt.FSPallet),
+		mergedPkgTreeFS: mergedPkgTreeFS,
 		mergedPkgTree: &fpkg.FSPkgTree{
-			// FIXME: initialize an FS whose children correspond to the keys of mergedPallets
+			RootPath: shallowCache.Path(),
+			FS:       mergedPkgTreeFS,
 		},
 	}
 }
@@ -68,6 +75,13 @@ func (c *MergedFSPalletCache) LoadFSPallet(pltPath string, version string) (*fpl
 	}
 	maps.Copy(c.mergedPallets, mergedPlts)
 	c.mergedPallets[versionedPath] = mergedPlt
+	for p, mp := range mergedPlts {
+		p = fmt.Sprintf("%s@%s", p, mp.Version)
+		c.mergedPkgTreeFS.Children[p] = mp.FS
+		// fmt.Printf("Cached merged pallet: %s\n", p)
+	}
+	c.mergedPkgTreeFS.Children[versionedPath] = mergedPlt.FS
+	// fmt.Printf("Cached merged pallet: %s\n", versionedPath)
 	return mergedPlt, nil
 }
 
@@ -146,6 +160,7 @@ func (c *MergedFSPalletCache) LoadFSPkgs(searchPattern string) ([]*fpkg.FSPkg, e
 		return nil, errors.Wrap(err, "couldn't load all merged pallets to search for packages in them")
 	}
 
+	// fmt.Printf("LoadFSPkgs %s\n", searchPattern)
 	pkgs, err := c.mergedPkgTree.LoadFSPkgs(searchPattern)
 	if err != nil {
 		return nil, err
@@ -179,7 +194,9 @@ func (c *MergedFSPalletCache) loadFSPalletContaining(
 	}
 	var palletPath string
 	var ok bool
-	if palletPath, pallet.Version, ok = strings.Cut(ffs.GetSubdirPath(c, pallet.FS.Path()), "@"); !ok {
+	if palletPath, pallet.Version, ok = strings.Cut(
+		ffs.GetSubdirPath(c, pallet.FS.Path()), "@",
+	); !ok {
 		return nil, errors.Wrapf(
 			err, "couldn't parse path of cached pallet configured at %s as pallet_path@version",
 			pallet.FS.Path(),

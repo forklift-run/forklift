@@ -18,7 +18,7 @@ import (
 // subdirectory path within the UnionFS as the root directory.
 type UnionFS struct {
 	RootPath string
-	Children map[string]fs.FS
+	Children map[string]PathedFS
 }
 
 // UnionFS: PathedFS
@@ -32,60 +32,44 @@ func (f *UnionFS) Path() string {
 func (f *UnionFS) Open(name string) (fs.File, error) {
 	name = path.Clean(name)
 	// fmt.Printf("Open(%s|%s)\n", f.Path(), name)
-	file, err := f.Overlay.Open(name)
-	switch {
-	default:
+	child, ok := f.Children[name]
+	if ok {
+		return child.Open(".")
+	}
+
+	childPath, child, err := f.findChildContaining(name)
+	if err != nil {
 		return nil, &fs.PathError{
 			Op:   "open",
 			Path: name,
-			Err:  errors.Wrapf(err, "couldn't open file %s in overlay", name),
+			Err:  errors.Wrapf(err, "couldn't find a matching union child for %s", name),
 		}
-	case errors.Is(err, fs.ErrNotExist):
-		ref, ok := f.underlayRefs[name]
-		if !ok {
-			if !f.impliedDirs.Has(name) {
-				return nil, &fs.PathError{
-					Op:   "open",
-					Path: name,
-					Err:  errors.Errorf("file %s not found in either overlay or underlay", name),
-				}
-			}
-			// TODO: implement this
-			return nil, errors.New("unimplemented: opening file for implied dir")
-		}
-		file, err := ref.FS.Open(ref.Path)
-		if err != nil {
-			return nil, &fs.PathError{
-				Op:   "open",
-				Path: name,
-				Err: errors.Wrapf(
-					err, "couldn't open file %s in underlay as %s", name, path.Join(ref.FS.Path(), ref.Path),
-				),
-			}
-		}
-		return file, nil
-	case err == nil:
-		return file, nil
 	}
+	return child.Open(childPath)
 }
 
-// findChildContaining returns the child which contains the specified path. If multiple children
+// findChildContaining returns the child which contains the specified path, and the subdirectory
+// path of the specified path within the child. If multiple children
 // contain the specified path, the child with the longest subdirectory path is returned.
-func (f *UnionFS) findChildContaining(path string) (childPath string, child fs.FS, err error) {
-	for p, c := range f.Children {
-		if p does not contain path {
-			continue
+func (f *UnionFS) findChildContaining(p string) (
+	childPath string, child PathedFS, err error,
+) {
+	p = path.Clean(p)
+	// fmt.Printf("findChildContaining %s\n", p)
+	palletCandidatePath := p
+	for {
+		if child, ok := f.Children[palletCandidatePath]; ok {
+			// fmt.Printf(
+			// 	"  found: %s\n    %s\n", child.Path(), strings.TrimPrefix(p, palletCandidatePath+"/"),
+			// )
+			return strings.TrimPrefix(p, palletCandidatePath+"/"), child, nil
 		}
-		if len(p) > len(childPath) {
-			childPath = p
-			child = c
+		palletCandidatePath = path.Dir(palletCandidatePath)
+		if palletCandidatePath == "/" || palletCandidatePath == "." {
+			// we can't go up anymore!
+			return "", nil, errors.Errorf("couldn't find %s", p)
 		}
 	}
-
-	if childPath == ""{
-		return "", nil, errors.Errorf("couldn't find %s", path)
-	}
-	return childPath, child, nil
 }
 
 // Sub returns a UnionFS corresponding to the subtree rooted at dir.
@@ -95,21 +79,20 @@ func (f *UnionFS) Sub(dir string) (PathedFS, error) {
 	if dir == "." {
 		return f, nil
 	}
-	overlaySub, err := f.Overlay.Sub(dir)
-	if err != nil {
-		return nil, errors.Wrap(err, "couldn't make subtree for overlay")
+	child, ok := f.Children[dir]
+	if ok {
+		return child, nil
 	}
 
-	prefix := dir + "/"
-	underlayRefsSub := make(map[string]FileRef)
-	for target, ref := range f.underlayRefs {
-		if !strings.HasPrefix(target, prefix) {
-			continue
+	childPath, child, err := f.findChildContaining(dir)
+	if err != nil {
+		return nil, &fs.PathError{
+			Op:   "sub",
+			Path: dir,
+			Err:  errors.Wrapf(err, "couldn't find a matching union child for %s", dir),
 		}
-		underlayRefsSub[strings.TrimPrefix(target, prefix)] = ref
-		// fmt.Printf("  - %s\n", strings.TrimPrefix(target, prefix))
 	}
-	return NewMergeFS(overlaySub, underlayRefsSub), nil
+	return child.Sub(childPath)
 }
 
 // UnionFS: fs.ReadDirFS
@@ -120,95 +103,65 @@ func (f *UnionFS) ReadDir(name string) (entries []fs.DirEntry, err error) {
 	// fmt.Printf("ReadDir(%s|%s)\n", f.Path(), name)
 	entryNames := make(structures.Set[string])
 
-	info, err := fs.Stat(f.Overlay, name)
-	if err == nil {
-		if !info.IsDir() {
-			return nil, &fs.PathError{
-				Op:   "read",
-				Path: name,
-				Err:  errors.Wrapf(err, "%s is a non-directory file in overlay", name),
-			}
+	if name == "." {
+		for entryName := range f.Children {
+			entries = append(entries, &impliedDirEntry{name: entryName})
+			entryNames.Add(entryName)
 		}
-		if entries, err = fs.ReadDir(f.Overlay, name); err != nil {
-			return nil, &fs.PathError{
-				Op:   "read",
-				Path: name,
-				Err:  errors.Wrapf(err, "couldn't read directory %s in overlay", name),
-			}
-		}
-		for _, entry := range entries {
-			entryNames.Add(entry.Name())
-		}
+		slices.SortFunc(entries, func(a, b fs.DirEntry) int {
+			return cmp.Compare(a.Name(), b.Name())
+		})
+		return entries, nil
 	}
 
-	for target, ref := range f.underlayRefs {
-		entryName := path.Base(target)
-		if entryNames.Has(entryName) { // e.g. entry was already added by the overlay
-			continue
-		}
-		entry, err := matchUnderlayRef(name, target, ref)
-		if err != nil {
-			return nil, err
-		}
-		if entry == nil {
-			continue
-		}
-
-		entries = append(entries, entry)
-		entryNames.Add(entryName)
+	child, ok := f.Children[name]
+	if ok {
+		return fs.ReadDir(child, ".")
 	}
 
-	for dir := range f.impliedDirs {
-		if path.Dir(dir) != name {
-			continue
+	childPath, child, err := f.findChildContaining(name)
+	if err != nil {
+		return nil, &fs.PathError{
+			Op:   "readdir",
+			Path: name,
+			Err:  errors.Wrapf(err, "couldn't find a matching union child for %s", name),
 		}
-		entryName := path.Base(dir)
-		if entryNames.Has(entryName) { // e.g. entry was already added by the overlay
-			continue
-		}
-		entries = append(entries, &impliedDirEntry{name: entryName})
-		entryNames.Add(entryName)
 	}
-
-	slices.SortFunc(entries, func(a, b fs.DirEntry) int {
-		return cmp.Compare(a.Name(), b.Name())
-	})
-	return entries, nil
+	return fs.ReadDir(child, childPath)
 }
 
 // UnionFS: fs.ReadFileFS
 
-// ReadFile returns the contents from reading the named file from the overlay (if it exists in the
-// overlay), or else from an underlay filesystem depending on which one is recorded to have that
-// file.
+// ReadFile returns the contents from reading the named file in the matching child (if it exists in
+// the child.
 func (f *UnionFS) ReadFile(name string) ([]byte, error) {
 	name = path.Clean(name)
 	// fmt.Printf("ReadFile(%s|%s)\n", f.Path(), name)
-	contents, err := fs.ReadFile(f.Overlay, name)
-	switch {
-	default:
-		return nil, errors.Wrapf(err, "couldn't read file %s in overlay", name)
-	case errors.Is(err, fs.ErrNotExist):
-		ref, ok := f.underlayRefs[name]
-		if !ok {
-			if f.impliedDirs.Has(name) {
-				return nil, &fs.PathError{
-					Op:   "read",
-					Path: name,
-					Err:  errors.Errorf("file %s is a directory implied by the underlay", name),
-				}
-			}
-			return nil, errors.Errorf(
-				"file %s not found in either overlay or underlay of %s", name, f.Path(),
-			)
+	if name == "." {
+		return nil, &fs.PathError{
+			Op:   "read",
+			Path: name,
+			Err:  errors.Errorf("file %s is the unionfs itself", name),
 		}
-		contents, err := fs.ReadFile(ref.FS, ref.Path)
-		return contents, errors.Wrapf(
-			err, "couldn't read file %s in underlay as %s", name, path.Join(ref.FS.Path(), ref.Path),
-		)
-	case err == nil:
-		return contents, nil
 	}
+	child, ok := f.Children[name]
+	if ok {
+		return nil, &fs.PathError{
+			Op:   "read",
+			Path: name,
+			Err:  errors.Errorf("file %s is a union child of the unionfs", name),
+		}
+	}
+
+	childPath, child, err := f.findChildContaining(name)
+	if err != nil {
+		return nil, &fs.PathError{
+			Op:   "read",
+			Path: name,
+			Err:  errors.Wrapf(err, "couldn't find a matching union child for %s", name),
+		}
+	}
+	return fs.ReadFile(child, childPath)
 }
 
 // UnionFS: fs.StatFS
@@ -218,44 +171,24 @@ func (f *UnionFS) ReadFile(name string) ([]byte, error) {
 func (f *UnionFS) Stat(name string) (fs.FileInfo, error) {
 	name = path.Clean(name)
 	// fmt.Printf("Stat(%s|%s)\n", f.Path(), name)
-	info, err := fs.Stat(f.Overlay, name)
-	switch {
-	default:
-		return nil, &fs.PathError{
-			Op:   "stat",
-			Path: name,
-			Err:  errors.Wrapf(err, "couldn't stat file %s in overlay", name),
-		}
-	case errors.Is(err, fs.ErrNotExist):
-		if name == "." {
-			return &impliedDirFileInfo{name: path.Base(f.Path())}, nil
-		}
-		ref, ok := f.underlayRefs[name]
-		if !ok {
-			if !f.impliedDirs.Has(name) {
-				return nil, &fs.PathError{
-					Op:   "stat",
-					Path: name,
-					Err:  errors.Errorf("file %s not found in either overlay or underlay", name),
-				}
-			}
-			// fmt.Printf("  %s is an implied dir!\n", name)
-			return &impliedDirFileInfo{name: path.Base(name)}, nil
-		}
-		info, err := fs.Stat(ref.FS, ref.Path)
-		if err != nil {
-			return nil, &fs.PathError{
-				Op:   "stat",
-				Path: name,
-				Err: errors.Wrapf(
-					err, "couldn't stat file %s in underlay as %s", name, path.Join(ref.FS.Path(), ref.Path),
-				),
-			}
-		}
-		return info, nil
-	case err == nil:
-		return info, nil
+	if name == "." {
+		return &impliedDirFileInfo{name: path.Base(f.Path())}, nil
 	}
+
+	_, ok := f.Children[name]
+	if ok {
+		return &impliedDirFileInfo{name: name}, nil
+	}
+
+	childPath, child, err := f.findChildContaining(name)
+	if err != nil {
+		return nil, &fs.PathError{
+			Op:   "open",
+			Path: name,
+			Err:  errors.Wrapf(err, "couldn't find a matching union child for %s", name),
+		}
+	}
+	return fs.Stat(child, childPath)
 }
 
 // UnionFS: fs.ReadLinkFS
@@ -263,84 +196,52 @@ func (f *UnionFS) Stat(name string) (fs.FileInfo, error) {
 func (f *UnionFS) ReadLink(name string) (string, error) {
 	name = path.Clean(name)
 	// fmt.Printf("ReadLink(%s|%s)\n", f.Path(), name)
-	target, err := ReadLink(f.Overlay, name)
-	switch {
-	default:
+	if name == "." {
 		return "", &fs.PathError{
 			Op:   "lstat",
 			Path: name,
-			Err: errors.Wrapf(
-				err, "couldn't stat (without following symlinks) file %s in overlay", name,
-			),
+			Err:  errors.Errorf("file %s is the unionfs itself", name),
 		}
-	case errors.Is(err, fs.ErrNotExist):
-		ref, ok := f.underlayRefs[name]
-		if !ok {
-			return "", &fs.PathError{
-				Op:   "lstat",
-				Path: name,
-				Err:  errors.Errorf("file %s not a symlink in overlay or underlay", name),
-			}
-		}
-		target, err := ReadLink(ref.FS, ref.Path)
-		if err != nil {
-			return "", &fs.PathError{
-				Op:   "lstat",
-				Path: name,
-				Err: errors.Wrapf(
-					err, "couldn't stat file (without following symlinks) %s in underlay as %s",
-					name, path.Join(ref.FS.Path(), ref.Path),
-				),
-			}
-		}
-		return target, nil
-	case err == nil:
-		return target, nil
 	}
+	child, ok := f.Children[name]
+	if ok {
+		return "", &fs.PathError{
+			Op:   "lstat",
+			Path: name,
+			Err:  errors.Errorf("file %s is a union child of the unionfs", name),
+		}
+	}
+
+	childPath, child, err := f.findChildContaining(name)
+	if err != nil {
+		return "", &fs.PathError{
+			Op:   "lstat",
+			Path: name,
+			Err:  errors.Wrapf(err, "couldn't find a matching union child for %s", name),
+		}
+	}
+	return fs.ReadLink(child, childPath)
 }
 
 func (f *UnionFS) StatLink(name string) (fs.FileInfo, error) {
 	name = path.Clean(name)
 	// fmt.Printf("StatLink(%s|%s)\n", f.Path(), name)
-	info, err := StatLink(f.Overlay, name)
-	switch {
-	default:
+	if name == "." {
+		return f.Stat(".")
+	}
+
+	_, ok := f.Children[name]
+	if ok {
+		return f.Stat(name)
+	}
+
+	childPath, child, err := f.findChildContaining(name)
+	if err != nil {
 		return nil, &fs.PathError{
 			Op:   "lstat",
 			Path: name,
-			Err: errors.Wrapf(
-				err, "couldn't stat (without following symlinks) file %s in overlay", name,
-			),
+			Err:  errors.Wrapf(err, "couldn't find a matching union child for %s", name),
 		}
-	case errors.Is(err, fs.ErrNotExist):
-		if name == "." {
-			return &impliedDirFileInfo{name: path.Base(f.Path())}, nil
-		}
-		ref, ok := f.underlayRefs[name]
-		if !ok {
-			if !f.impliedDirs.Has(name) {
-				return nil, &fs.PathError{
-					Op:   "lstat",
-					Path: name,
-					Err:  errors.Errorf("file %s not found in either overlay or underlay", name),
-				}
-			}
-			// fmt.Printf("  %s is an implied dir!\n", name)
-			return &impliedDirFileInfo{name: path.Base(name)}, nil
-		}
-		info, err := StatLink(ref.FS, ref.Path)
-		if err != nil {
-			return nil, &fs.PathError{
-				Op:   "lstat",
-				Path: name,
-				Err: errors.Wrapf(
-					err, "couldn't stat file (without following symlinks) %s in underlay as %s",
-					name, path.Join(ref.FS.Path(), ref.Path),
-				),
-			}
-		}
-		return info, nil
-	case err == nil:
-		return info, nil
 	}
+	return fs.Lstat(child, childPath)
 }
