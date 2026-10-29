@@ -96,7 +96,8 @@ var app = &cli.App{
 			EnvVars: []string{"FORKLIFT_PLATFORM"},
 		},
 	},
-	Suggest: true,
+	EnableBashCompletion: true,
+	Suggest:              true,
 }
 
 // Versioning

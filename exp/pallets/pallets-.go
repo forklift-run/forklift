@@ -48,7 +48,7 @@ func LoadFSPallet(fsys ffs.PathedFS, subdirPath string) (p *FSPallet, err error)
 		)
 	}
 	if p.Pallet.Decl, err = loadPalletDecl(p.FS, PalletDeclFile); err != nil {
-		return nil, errors.Errorf("couldn't load pallet config")
+		return nil, errors.Errorf("couldn't load pallet declaration")
 	}
 	p.FSPkgTree = &fpkg.FSPkgTree{
 		FS:       p.FS,
@@ -75,7 +75,9 @@ func LoadFSPalletContaining(path string) (*FSPallet, error) {
 		palletCandidatePath = filepath.Dir(palletCandidatePath)
 		if palletCandidatePath == "/" || palletCandidatePath == "." {
 			// we can't go up anymore!
-			return nil, errors.Errorf("no pallet config file found in any parent directory of %s", path)
+			return nil, errors.Errorf(
+				"no pallet declaration file found in any parent directory of %s", path,
+			)
 		}
 	}
 }
@@ -89,7 +91,8 @@ func LoadFSPallets(fsys ffs.PathedFS, searchPattern string) ([]*FSPallet, error)
 	palletDeclFiles, err := doublestar.Glob(fsys, searchPattern)
 	if err != nil {
 		return nil, errors.Wrapf(
-			err, "couldn't search for pallet config files matching %s/%s", fsys.Path(), searchPattern,
+			err, "couldn't search for pallet declaration files matching %s/%s",
+			fsys.Path(), searchPattern,
 		)
 	}
 
@@ -245,7 +248,7 @@ func (p Pallet) VersionQuery() string {
 
 // Check looks for errors in the construction of the pallet.
 func (p Pallet) Check() (errs []error) {
-	errs = append(errs, errsWrap(p.Decl.Check(), "invalid pallet config")...)
+	errs = append(errs, errsWrap(p.Decl.Check(), "invalid pallet declaration")...)
 	return errs
 }
 
