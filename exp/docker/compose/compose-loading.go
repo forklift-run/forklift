@@ -10,7 +10,7 @@ import (
 
 	"github.com/compose-spec/compose-go/v2/loader"
 	dct "github.com/compose-spec/compose-go/v2/types"
-	"github.com/docker/compose/v2/pkg/api"
+	"github.com/docker/compose/v5/pkg/api"
 	"github.com/pkg/errors"
 
 	ffs "github.com/forklift-run/forklift/exp/fs"

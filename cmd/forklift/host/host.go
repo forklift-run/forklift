@@ -48,10 +48,10 @@ func lsConAction(c *cli.Context) error {
 	if err != nil {
 		return errors.Wrapf(err, "couldn't list Docker containers for package deployment %s", deplName)
 	}
-	sort.Slice(containers, func(i, j int) bool {
-		return containers[i].Names[0] < containers[j].Names[0]
+	sort.Slice(containers.Items, func(i, j int) bool {
+		return containers.Items[i].Names[0] < containers.Items[j].Names[0]
 	})
-	for _, container := range containers {
+	for _, container := range containers.Items {
 		fmt.Printf("%s\n", strings.TrimPrefix(container.Names[0], "/"))
 	}
 	return nil
