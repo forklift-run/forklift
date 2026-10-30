@@ -50,6 +50,7 @@ func exportArchiveFile(
 		}
 	}()
 
+	// TODO: add support for zip archives, too
 	var archiveReader *tar.Reader
 	switch kind.MIME.Value {
 	case "application/x-tar":
