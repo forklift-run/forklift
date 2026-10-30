@@ -127,10 +127,8 @@ func (b *FSBundle) LoadDepls(searchPattern string) ([]fplt.Depl, error) {
 
 func (b *FSBundle) LoadResolvedDepl(name string) (depl *fplt.ResolvedDepl, err error) {
 	resolved := &fplt.ResolvedDepl{
-		Depl: fplt.Depl{
-			Name: name,
-			Decl: b.Manifest.Deploys[name],
-		},
+		Name: name,
+		Decl: b.Manifest.Deploys[name],
 	}
 	pkgPath := b.Manifest.Deploys[name].Package
 	if resolved.PkgReq, err = b.LoadPkgReq(pkgPath); err != nil {
