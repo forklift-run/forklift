@@ -12,7 +12,7 @@ import (
 
 func lsFeatAction(c *cli.Context) error {
 	plt, _, err := processFullBaseArgs(c.String("workspace"), processingOptions{
-		merge: true,
+		mergePallet: true,
 	})
 	if err != nil {
 		return err
@@ -25,7 +25,7 @@ func lsFeatAction(c *cli.Context) error {
 
 func showFeatAction(c *cli.Context) error {
 	plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{
-		merge: true,
+		mergePallet: true,
 	})
 	if err != nil {
 		return err

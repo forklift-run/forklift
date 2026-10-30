@@ -6,6 +6,7 @@ import (
 
 	"github.com/urfave/cli/v2"
 
+	"github.com/forklift-run/forklift/internal/app/forklift"
 	fcli "github.com/forklift-run/forklift/internal/app/forklift/cli"
 )
 
@@ -14,7 +15,7 @@ import (
 func lsFileAction(c *cli.Context) error {
 	plt, _, err := processFullBaseArgs(c, processingOptions{
 		enableOverrides: true,
-		merge:           true,
+		mergePallet:     true,
 	})
 	if err != nil {
 		return err
@@ -25,7 +26,7 @@ func lsFileAction(c *cli.Context) error {
 		// Exclude hidden directories such as `.git`
 		filter = "{*,[^.]*/**}"
 	}
-	paths, err := fcli.ListPalletFiles(plt, filter)
+	paths, err := forklift.ListPalletFiles(plt, filter)
 	if err != nil {
 		return err
 	}
@@ -40,13 +41,13 @@ func lsFileAction(c *cli.Context) error {
 func locateFileAction(c *cli.Context) error {
 	plt, _, err := processFullBaseArgs(c, processingOptions{
 		enableOverrides: true,
-		merge:           true,
+		mergePallet:     true,
 	})
 	if err != nil {
 		return err
 	}
 
-	location, err := fcli.GetFileLocation(plt, c.Args().First())
+	location, err := forklift.GetFileLocation(plt, c.Args().First())
 	if err != nil {
 		return err
 	}
@@ -59,7 +60,7 @@ func locateFileAction(c *cli.Context) error {
 func showFileAction(c *cli.Context) error {
 	plt, _, err := processFullBaseArgs(c, processingOptions{
 		enableOverrides: true,
-		merge:           true,
+		mergePallet:     true,
 	})
 	if err != nil {
 		return err
@@ -73,13 +74,13 @@ func showFileAction(c *cli.Context) error {
 func editFileAction(c *cli.Context) error {
 	plt, _, err := processFullBaseArgs(c, processingOptions{
 		enableOverrides: true,
-		merge:           true,
+		mergePallet:     true,
 	})
 	if err != nil {
 		return err
 	}
 
-	return fcli.EditFileWithCOW(plt, c.Args().First(), c.String("editor"))
+	return fcli.EditFileWithCOW(c.Context, plt, c.Args().First(), c.String("editor"))
 }
 
 // del-file
@@ -87,7 +88,7 @@ func editFileAction(c *cli.Context) error {
 func delFileAction(c *cli.Context) error {
 	plt, _, err := processFullBaseArgs(c, processingOptions{
 		enableOverrides: true,
-		merge:           true,
+		mergePallet:     true,
 	})
 	if err != nil {
 		return err

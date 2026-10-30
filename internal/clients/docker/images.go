@@ -71,7 +71,7 @@ func (c *Client) ListImages(ctx context.Context, matchName string) ([]Image, err
 
 func (c *Client) InspectImage(ctx context.Context, imageHash string) (Image, error) {
 	buffer := &bytes.Buffer{}
-	getRefFunc := func(imageHash string) (interface{}, []byte, error) {
+	getRefFunc := func(imageHash string) (any, []byte, error) {
 		raw := bytes.Buffer{}
 		response, err := c.Client.ImageInspect(ctx, imageHash, client.ImageInspectWithRawResponse(&raw))
 		return response, raw.Bytes(), err

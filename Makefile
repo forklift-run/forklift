@@ -5,7 +5,7 @@ GOLANG_CROSS_VERSION ?= v1.25.3-v2.12.5@sha256:f8588a041182d81448ed655697dcdd31a
 
 .PHONY: dev
 dev: ## dev build
-dev: clean install generate vet fmt spell lint test mod-tidy
+dev: clean install generate fmt fix spell vet lint test mod-tidy
 
 .PHONY: ci
 ci: ## CI build
@@ -31,6 +31,11 @@ generate: ## go generate
 vet: ## go vet
 	$(call print-target)
 	go vet ./...
+
+.PHONY: fix
+fix: ## go fix
+	$(call print-target)
+	go fix ./...
 
 .PHONY: fmt
 fmt: ## go fmt

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"io/fs"
@@ -11,56 +12,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/bmatcuk/doublestar/v4"
 	"github.com/pkg/errors"
 
+	ffs "github.com/forklift-run/forklift/exp/fs"
+	fplt "github.com/forklift-run/forklift/exp/pallets"
 	"github.com/forklift-run/forklift/internal/app/forklift"
 )
 
-func ListPalletFiles(pallet *forklift.FSPallet, pattern string) ([]string, error) {
-	if pattern == "" {
-		pattern = "**"
-	}
-
-	paths, err := doublestar.Glob(pallet.FS, pattern, doublestar.WithFilesOnly())
-	if err != nil {
-		return nil, errors.Wrapf(
-			err, "couldn't list files matching pattern %s in %s", pattern, pallet.FS.Path(),
-		)
-	}
-
-	if len(paths) == 0 {
-		if pattern != "**" {
-			pattern = path.Join(pattern, "**")
-		}
-		subPaths, err := doublestar.Glob(pallet.FS, pattern, doublestar.WithFilesOnly())
-		if err != nil {
-			return paths, errors.Wrapf(
-				err, "couldn't list files matching pattern %s in %s", pattern, pallet.FS.Path(),
-			)
-		}
-		paths = append(paths, subPaths...)
-	}
-
-	return paths, nil
-}
-
-func GetFileLocation(pallet *forklift.FSPallet, filePath string) (string, error) {
-	fsys, ok := pallet.FS.(*forklift.MergeFS)
-	if !ok {
-		return path.Join(pallet.FS.Path(), filePath), nil
-	}
-
-	resolved, err := fsys.Resolve(filePath)
-	if err != nil {
-		return "", errors.Wrapf(
-			err, "couldn't resolve the location of file %s in %s", filePath, pallet.FS.Path(),
-		)
-	}
-	return resolved, nil
-}
-
-func FprintFile(out io.Writer, pallet *forklift.FSPallet, filePath string) error {
+func FprintFile(out io.Writer, pallet *fplt.FSPallet, filePath string) error {
 	data, err := fs.ReadFile(pallet.FS, filePath)
 	if err != nil {
 		return errors.Wrapf(err, "couldn't read file %s in %s", filePath, pallet.FS.Path())
@@ -70,16 +29,18 @@ func FprintFile(out io.Writer, pallet *forklift.FSPallet, filePath string) error
 	return nil
 }
 
-func EditFileWithCOW(pallet *forklift.FSPallet, filePath, editor string) error {
-	fsys, ok := pallet.FS.(*forklift.MergeFS)
+func EditFileWithCOW(
+	ctx context.Context, pallet *fplt.FSPallet, filePath, editor string,
+) error {
+	fsys, ok := pallet.FS.(*ffs.MergeFS)
 	if !ok {
 		fullPath := path.Join(pallet.FS.Path(), filePath)
-		return editFile(editor, fullPath, path.Dir(fullPath))
+		return editFile(ctx, editor, fullPath, path.Dir(fullPath))
 	}
 	overlayPath := path.Join(fsys.Overlay.Path(), filePath)
 	resolved, err := fsys.Resolve(filePath)
 	if err != nil || strings.HasPrefix(resolved, overlayPath) {
-		return editFile(editor, overlayPath, path.Dir(overlayPath))
+		return editFile(ctx, editor, overlayPath, path.Dir(overlayPath))
 	}
 
 	// Copy file from underlay into an editable temporary file
@@ -91,7 +52,7 @@ func EditFileWithCOW(pallet *forklift.FSPallet, filePath, editor string) error {
 	if err != nil {
 		return errors.Wrapf(err, "couldn't read source file %s in underlay", filePath)
 	}
-	edited, err := editWithTempFile(editor, filePath, original)
+	edited, err := editWithTempFile(ctx, editor, filePath, original)
 	if err != nil {
 		return errors.Wrapf(err, "couldn't edit %s in a temporary file", filePath)
 	}
@@ -104,7 +65,7 @@ func EditFileWithCOW(pallet *forklift.FSPallet, filePath, editor string) error {
 	}
 
 	fmt.Fprintf(os.Stderr, "Saving edits on %s to %s...\n", resolved, overlayPath)
-	if err = forklift.EnsureExists(filepath.FromSlash(path.Dir(overlayPath))); err != nil {
+	if err = ffs.EnsureExists(filepath.FromSlash(path.Dir(overlayPath))); err != nil {
 		return err
 	}
 	overlayFile, err := os.OpenFile(
@@ -126,9 +87,9 @@ func EditFileWithCOW(pallet *forklift.FSPallet, filePath, editor string) error {
 	return nil
 }
 
-func editFile(editor, filePath, cwd string) error {
-	cmd := exec.Command( //nolint:gosec // we trust the user to provide reasonable args
-		editor, filepath.FromSlash(filePath),
+func editFile(ctx context.Context, editor, filePath, cwd string) error {
+	cmd := exec.CommandContext( //nolint:gosec // we trust the user to provide reasonable args
+		ctx, editor, filepath.FromSlash(filePath),
 	)
 	cmd.Dir = filepath.FromSlash(cwd)
 	cmd.Stdout = os.Stdout
@@ -136,7 +97,9 @@ func editFile(editor, filePath, cwd string) error {
 	return cmd.Run()
 }
 
-func editWithTempFile(editor, filePath string, original []byte) (edited []byte, err error) {
+func editWithTempFile(
+	ctx context.Context, editor, filePath string, original []byte,
+) (edited []byte, err error) {
 	tempFile, err := os.CreateTemp("", path.Base(filePath)+".*")
 	if err != nil {
 		return nil, errors.Wrapf(err, "couldn't make temporary editable copy of %s", filePath)
@@ -158,7 +121,7 @@ func editWithTempFile(editor, filePath string, original []byte) (edited []byte, 
 			err, "couldn't copy contents of source file into temporary file %s", tempFile.Name(),
 		)
 	}
-	if err = editFile(editor, tempFile.Name(), ""); err != nil {
+	if err = editFile(ctx, editor, tempFile.Name(), ""); err != nil {
 		return nil, err
 	}
 	if edited, err = os.ReadFile(tempFile.Name()); err != nil {
@@ -167,11 +130,11 @@ func editWithTempFile(editor, filePath string, original []byte) (edited []byte, 
 	return edited, nil
 }
 
-func RemoveFile(indent int, pallet *forklift.FSPallet, filePath string) error {
+func RemoveFile(indent int, pallet *fplt.FSPallet, filePath string) error {
 	if err := os.RemoveAll(filepath.FromSlash(path.Join(pallet.FS.Path(), filePath))); err != nil {
 		return err
 	}
-	paths, err := ListPalletFiles(pallet, filePath)
+	paths, err := forklift.ListPalletFiles(pallet, filePath)
 	if err != nil {
 		return errors.Wrapf(
 			err, "couldn't check whether any files at/in %s are imported from other pallets", filePath,
