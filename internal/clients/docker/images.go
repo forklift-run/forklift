@@ -11,9 +11,9 @@ import (
 	"github.com/distribution/reference"
 	"github.com/docker/cli/cli/command/inspect"
 	"github.com/docker/cli/cli/streams"
-	dti "github.com/docker/docker/api/types/image"
-	"github.com/docker/docker/pkg/jsonmessage"
+	dti "github.com/moby/moby/api/types/image"
 	"github.com/moby/moby/client"
+	"github.com/moby/moby/client/pkg/jsonmessage"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
 )
@@ -156,15 +156,8 @@ func (c *Client) PullImage(
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if cerr := responseBody.Close(); cerr != nil {
-			if err == nil {
-				err = cerr
-			}
-		}
-	}()
 
-	return jsonmessage.DisplayJSONMessagesToStream(responseBody, outStream, nil)
+	return jsonmessage.DisplayMessages(responseBody.JSONMessages(ctx), outStream)
 }
 
 func NewOutStream(out io.Writer) *streams.Out {
