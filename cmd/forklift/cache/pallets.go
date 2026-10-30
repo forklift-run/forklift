@@ -5,7 +5,8 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/forklift-run/forklift/internal/app/forklift"
+	"github.com/forklift-run/forklift/exp/caching"
+	fplt "github.com/forklift-run/forklift/exp/pallets"
 	fcli "github.com/forklift-run/forklift/internal/app/forklift/cli"
 )
 
@@ -21,8 +22,8 @@ func lsPltAction(c *cli.Context) error {
 	}
 
 	// TODO: add a --pattern cli flag for the pattern
-	return lsGitRepo("pallet", "**", cache.LoadFSPallets, func(r, s *forklift.FSPallet) int {
-		return forklift.ComparePallets(r.Pallet, s.Pallet)
+	return lsGitRepo("pallet", "**", cache.LoadFSPallets, func(r, s *fplt.FSPallet) int {
+		return fplt.ComparePallets(r.Pallet, s.Pallet)
 	})
 }
 
@@ -36,8 +37,10 @@ func showPltAction(c *cli.Context) error {
 	if !cache.Exists() {
 		return errMissingCache
 	}
+	mergedCache := caching.NewMergedFSPalletCache(cache)
 
 	return showGitRepo(
-		os.Stdout, cache, c.Args().First(), cache.LoadFSPallet, fcli.FprintCachedPallet, true,
+		os.Stdout, mergedCache, c.Args().First(), mergedCache.LoadFSPallet,
+		fcli.FprintCachedPallet, true,
 	)
 }

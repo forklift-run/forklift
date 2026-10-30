@@ -25,6 +25,8 @@ func MakeCmd(versions Versions) *cli.Command {
 	}
 }
 
+const usageBun = "bundle_index_or_name"
+
 func makeUseSubcmds(versions Versions) []*cli.Command {
 	const category = "Use the stage store"
 	return []*cli.Command{
@@ -107,7 +109,7 @@ func makeQueryBunSubcmds(versions Versions) []*cli.Command {
 			Aliases:   []string{"show-bundle"},
 			Category:  category,
 			Usage:     "Describes a staged pallet bundle",
-			ArgsUsage: "bundle_index_or_name",
+			ArgsUsage: usageBun,
 			Action:    showBunAction(versions),
 		},
 		{
@@ -115,7 +117,7 @@ func makeQueryBunSubcmds(versions Versions) []*cli.Command {
 			Aliases:   []string{"show-bundle-deployment"},
 			Category:  category,
 			Usage:     "Describes the specified package deployment of the specified staged pallet bundle",
-			ArgsUsage: "bundle_index_or_name deployment_name",
+			ArgsUsage: usageBun + " deployment_name",
 			Action:    showBunDeplAction(versions),
 		},
 		{
@@ -123,7 +125,7 @@ func makeQueryBunSubcmds(versions Versions) []*cli.Command {
 			Aliases:   []string{"locate-bundle"},
 			Category:  category,
 			Usage:     "Prints the absolute filesystem path of the specified staged pallet bundle",
-			ArgsUsage: "bundle_index_or_name",
+			ArgsUsage: usageBun,
 			Action:    locateBunAction(versions),
 		},
 		{
@@ -132,7 +134,7 @@ func makeQueryBunSubcmds(versions Versions) []*cli.Command {
 			Category: category,
 			Usage: "Prints the absolute filesystem path of the package for the specified package " +
 				"deployment of the specified staged pallet bundle",
-			ArgsUsage: "bundle_index_or_name deployment_name",
+			ArgsUsage: usageBun + " deployment_name",
 			Action:    locateBunDeplPkgAction(versions),
 		},
 	}
@@ -147,7 +149,7 @@ func makeModifySubcmds(versions Versions) []*cli.Command {
 			Category: category,
 			Usage: "Sets the specified staged pallet bundle as the next one to be applied, then " +
 				"caches required images",
-			ArgsUsage: "bundle_index_or_name",
+			ArgsUsage: usageBun,
 			Action:    setNextAction(versions),
 			Flags: []cli.Flag{
 				&cli.BoolFlag{
@@ -182,7 +184,7 @@ func makeModifyBunSubcmds(versions Versions) []*cli.Command {
 			Category: category,
 			Usage: "Assigns the specified name to the specified staged pallet bundle; if the name was " +
 				"already assigned, it's reassigned",
-			ArgsUsage: "bundle_name_to_assign bundle_index_or_name",
+			ArgsUsage: "bundle_name_to_assign " + usageBun,
 			Action:    addBunNameAction(versions),
 		},
 		{
@@ -198,7 +200,7 @@ func makeModifyBunSubcmds(versions Versions) []*cli.Command {
 			Aliases:   []string{"delete-bundle"},
 			Category:  category,
 			Usage:     "Deletes the specified staged pallet bundle",
-			ArgsUsage: "bundle_index_or_name",
+			ArgsUsage: usageBun,
 			Action:    delBunAction(versions),
 		},
 		{
