@@ -21,6 +21,30 @@ type UnionFS struct {
 	Children map[string]PathedFS
 }
 
+// UnionFS: resolverFS
+
+// Resolve returns the path of the named file from the appropriate child.
+func (f *UnionFS) Resolve(name string) (string, error) {
+	child, ok := f.Children[name]
+	if ok {
+		return child.Path(), nil
+	}
+
+	childPath, child, err := f.findChildContaining(name)
+	if err != nil {
+		return "", &fs.PathError{
+			Op:   "resolve",
+			Path: name,
+			Err:  errors.Wrapf(err, "couldn't find a matching union child for %s", name),
+		}
+	}
+	fsys, ok := child.(resolverFS)
+	if !ok {
+		return path.Join(child.Path(), childPath), nil
+	}
+	return fsys.Resolve(childPath)
+}
+
 // UnionFS: PathedFS
 
 // Path returns the path of the overlay.
