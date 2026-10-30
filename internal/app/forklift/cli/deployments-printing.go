@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/forklift-run/forklift/exp/caching"
+	ffs "github.com/forklift-run/forklift/exp/fs"
 	fpkg "github.com/forklift-run/forklift/exp/packaging"
 	fplt "github.com/forklift-run/forklift/exp/pallets"
 	"github.com/forklift-run/forklift/internal/app/forklift"
@@ -270,7 +271,20 @@ func FprintDeplPkgLocation(
 	if resolved.Decl.Disabled && !allowDisabled {
 		return errors.Errorf("package deployment %s is not enabled!", depl.Name)
 	}
-	// FIXME: make this account for pallet layering!
-	_, _ = fmt.Fprintln(out, resolved.Pkg.FS.Path())
+
+	fsys, ok := resolved.Pkg.FS.(*ffs.MergeFS)
+	if !ok {
+		_, _ = fmt.Fprintln(out, resolved.Pkg.FS.Path())
+		return nil
+	}
+
+	resolvedPkg, err := fsys.Resolve("forklift-package.yml")
+	if err != nil {
+		return errors.Wrapf(
+			err, "couldn't resolve the location of package %s for deployment %s",
+			resolved.Pkg.Path(), depl.Name,
+		)
+	}
+	_, _ = fmt.Fprintln(out, path.Dir(resolvedPkg))
 	return nil
 }
