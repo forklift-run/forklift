@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - (cli) Improve some stdout messages
+- (cli) When performing a file export of the entire root directory of a GitHub .tar.gz repo archive, Forklift skips the pax_global_header file of type `0b1100111` instead of erroring out.
 
 ## 0.8.0 - 2025-07-21
 

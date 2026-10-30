@@ -142,9 +142,13 @@ func extractFile(
 	header *tar.Header, tarReader *tar.Reader, sourcePath, exportPath string, destPerms fs.FileMode,
 ) error {
 	targetPath := path.Join(exportPath, strings.TrimPrefix(header.Name, sourcePath))
+	const typePaxGlobalHeader = 0b1100111
 	switch header.Typeflag {
 	default:
 		return errors.Errorf("unknown type of file %s in archive: %b", header.Name, header.Typeflag)
+	case typePaxGlobalHeader:
+		// skip this tarball metadata file
+		break
 	case tar.TypeDir:
 		if err := ffs.EnsureExists(filepath.FromSlash(targetPath)); err != nil {
 			return errors.Wrapf(
