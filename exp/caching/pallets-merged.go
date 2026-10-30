@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"maps"
 	"path"
-	"strings"
 
 	"github.com/pkg/errors"
 
@@ -167,7 +166,9 @@ func (c *MergedFSPalletCache) LoadFSPkgs(searchPattern string) ([]*fpkg.FSPkg, e
 	}
 
 	for _, pkg := range pkgs {
-		pallet, err := c.loadFSPalletContaining(ffs.GetSubdirPath(c, pkg.FS.Path()))
+		pallet, err := loadVersionedFSPalletContaining(
+			c.mergedPkgTree.FS, ffs.GetSubdirPath(c, pkg.FS.Path()),
+		)
 		if err != nil {
 			return nil, errors.Wrapf(
 				err, "couldn't find the cached pallet providing the cached package at %s", pkg.FS.Path(),
@@ -178,36 +179,4 @@ func (c *MergedFSPalletCache) LoadFSPkgs(searchPattern string) ([]*fpkg.FSPkg, e
 		}
 	}
 	return pkgs, nil
-}
-
-// loadFSPalletContaining finds, loads, and merges the FSPallet which contains the provided
-// subdirectory path.
-func (c *MergedFSPalletCache) loadFSPalletContaining(
-	subdirPath string,
-) (pallet *fplt.FSPallet, err error) {
-	if c == nil {
-		return nil, errors.New("cache is nil")
-	}
-
-	if pallet, err = loadFSPalletContaining(c.mergedPkgTree.FS, subdirPath); err != nil {
-		return nil, errors.Wrapf(err, "couldn't find any pallet containing %s", subdirPath)
-	}
-	var palletPath string
-	var ok bool
-	if palletPath, pallet.Version, ok = strings.Cut(
-		ffs.GetSubdirPath(c, pallet.FS.Path()), "@",
-	); !ok {
-		return nil, errors.Wrapf(
-			err, "couldn't parse path of cached pallet configured at %s as pallet_path@version",
-			pallet.FS.Path(),
-		)
-	}
-	pallet.FSPkgTree.Version = pallet.Version
-	if palletPath != pallet.Path() {
-		return nil, errors.Errorf(
-			"cached pallet %s is in cache at %s@%s instead of %s@%s",
-			pallet.Path(), palletPath, pallet.Version, pallet.Path(), pallet.Version,
-		)
-	}
-	return pallet, nil
 }

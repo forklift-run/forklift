@@ -147,7 +147,9 @@ func (c *FSPalletCache) LoadFSPkgs(searchPattern string) ([]*fpkg.FSPkg, error) 
 	}
 
 	for _, pkg := range pkgs {
-		pallet, err := c.loadFSPalletContaining(ffs.GetSubdirPath(c, pkg.FS.Path()))
+		pallet, err := loadVersionedFSPalletContaining(
+			c.pkgTree.FS, ffs.GetSubdirPath(c, pkg.FS.Path()),
+		)
 		if err != nil {
 			return nil, errors.Wrapf(
 				err, "couldn't find the cached pallet providing the cached package at %s", pkg.FS.Path(),
@@ -160,34 +162,34 @@ func (c *FSPalletCache) LoadFSPkgs(searchPattern string) ([]*fpkg.FSPkg, error) 
 	return pkgs, nil
 }
 
-// loadFSPalletContaining finds and loads the FSPallet which contains the provided subdirectory
-// path.
-func (c *FSPalletCache) loadFSPalletContaining(
-	subdirPath string,
+// loadVersionedFSPalletContaining finds and loads the FSPallet which contains the provided
+// subdirectory path, and then attaches versioning information to it based on its subdirectory
+// path of format pallet_path@version within fsys.
+func loadVersionedFSPalletContaining(
+	fsys ffs.PathedFS, subdirPath string,
 ) (pallet *fplt.FSPallet, err error) {
-	if c == nil {
-		return nil, errors.New("cache is nil")
-	}
-
-	if pallet, err = loadFSPalletContaining(c.pkgTree.FS, subdirPath); err != nil {
+	if pallet, err = loadFSPalletContaining(fsys, subdirPath); err != nil {
 		return nil, errors.Wrapf(err, "couldn't find any pallet containing %s", subdirPath)
 	}
+
 	var palletPath string
 	var ok bool
-	if palletPath, pallet.Version, ok = strings.Cut(ffs.GetSubdirPath(c, pallet.FS.Path()), "@"); !ok {
+	if palletPath, pallet.Version, ok = strings.Cut(
+		ffs.GetSubdirPath(fsys, pallet.FS.Path()), "@",
+	); !ok {
 		return nil, errors.Wrapf(
 			err, "couldn't parse path of cached pallet configured at %s as pallet_path@version",
 			pallet.FS.Path(),
 		)
 	}
-	pallet.FSPkgTree.Version = pallet.Version
 	if palletPath != pallet.Path() {
 		return nil, errors.Errorf(
 			"cached pallet %s is in cache at %s@%s instead of %s@%s",
 			pallet.Path(), palletPath, pallet.Version, pallet.Path(), pallet.Version,
 		)
 	}
-	return pallet, nil
+	pallet.FSPkgTree.Version = pallet.Version
+	return pallet, err
 }
 
 // loadFSPalletContaining loads the FSPallet containing the specified sub-directory path in the

@@ -70,7 +70,7 @@ func CopyFSFile(fsys PathedFS, sourcePath, destPath string, destPerms fs.FileMod
 		destPerms = sourceInfo.Mode().Perm()
 	}
 	destFile, err := os.OpenFile(
-		destPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, destPerms,
+		filepath.Clean(destPath), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, destPerms,
 	)
 	if err != nil {
 		return errors.Wrapf(err, "couldn't open dest file %s for copying", destPath)
