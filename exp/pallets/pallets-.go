@@ -47,13 +47,13 @@ func LoadFSPallet(fsys ffs.PathedFS, subdirPath string) (p *FSPallet, err error)
 			err, "couldn't enter directory %s from fs at %s", subdirPath, fsys.Path(),
 		)
 	}
-	if p.Pallet.Decl, err = loadPalletDecl(p.FS, PalletDeclFile); err != nil {
+	if p.Decl, err = loadPalletDecl(p.FS, PalletDeclFile); err != nil {
 		return nil, errors.Errorf("couldn't load pallet declaration")
 	}
 	p.FSPkgTree = &fpkg.FSPkgTree{
 		FS:       p.FS,
 		RootPath: p.Path(),
-		Version:  p.Pallet.Version,
+		Version:  p.Version,
 	}
 	return p, nil
 }

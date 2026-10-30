@@ -96,7 +96,7 @@ func loadPalletReqForkliftVersions(
 		versions = append(versions, reqForkliftVersion{
 			reqPath:         req.Path(),
 			reqVersion:      req.VersionLock.Version,
-			forkliftVersion: fsPallet.Pallet.Decl.ForkliftVersion,
+			forkliftVersion: fsPallet.Decl.ForkliftVersion,
 		})
 	}
 	return versions, nil

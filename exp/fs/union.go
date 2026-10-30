@@ -33,7 +33,7 @@ func (f *UnionFS) Resolve(name string) (string, error) {
 	childPath, child, err := f.findChildContaining(name)
 	if err != nil {
 		return "", &fs.PathError{
-			Op:   "resolve",
+			Op:   PathErrorOpResolve,
 			Path: name,
 			Err:  errors.Wrapf(err, "couldn't find a matching union child for %s", name),
 		}
@@ -64,7 +64,7 @@ func (f *UnionFS) Open(name string) (fs.File, error) {
 	childPath, child, err := f.findChildContaining(name)
 	if err != nil {
 		return nil, &fs.PathError{
-			Op:   "open",
+			Op:   PathErrorOpOpen,
 			Path: name,
 			Err:  errors.Wrapf(err, "couldn't find a matching union child for %s", name),
 		}
@@ -111,7 +111,7 @@ func (f *UnionFS) Sub(dir string) (PathedFS, error) {
 	childPath, child, err := f.findChildContaining(dir)
 	if err != nil {
 		return nil, &fs.PathError{
-			Op:   "sub",
+			Op:   PathErrorOpSub,
 			Path: dir,
 			Err:  errors.Wrapf(err, "couldn't find a matching union child for %s", dir),
 		}
@@ -146,7 +146,7 @@ func (f *UnionFS) ReadDir(name string) (entries []fs.DirEntry, err error) {
 	childPath, child, err := f.findChildContaining(name)
 	if err != nil {
 		return nil, &fs.PathError{
-			Op:   "readdir",
+			Op:   PathErrorOpReadDir,
 			Path: name,
 			Err:  errors.Wrapf(err, "couldn't find a matching union child for %s", name),
 		}
@@ -163,15 +163,14 @@ func (f *UnionFS) ReadFile(name string) ([]byte, error) {
 	// fmt.Printf("ReadFile(%s|%s)\n", f.Path(), name)
 	if name == "." {
 		return nil, &fs.PathError{
-			Op:   "read",
+			Op:   PathErrorOpRead,
 			Path: name,
 			Err:  errors.Errorf("file %s is the unionfs itself", name),
 		}
 	}
-	child, ok := f.Children[name]
-	if ok {
+	if _, ok := f.Children[name]; ok {
 		return nil, &fs.PathError{
-			Op:   "read",
+			Op:   PathErrorOpRead,
 			Path: name,
 			Err:  errors.Errorf("file %s is a union child of the unionfs", name),
 		}
@@ -180,7 +179,7 @@ func (f *UnionFS) ReadFile(name string) ([]byte, error) {
 	childPath, child, err := f.findChildContaining(name)
 	if err != nil {
 		return nil, &fs.PathError{
-			Op:   "read",
+			Op:   PathErrorOpRead,
 			Path: name,
 			Err:  errors.Wrapf(err, "couldn't find a matching union child for %s", name),
 		}
@@ -207,7 +206,7 @@ func (f *UnionFS) Stat(name string) (fs.FileInfo, error) {
 	childPath, child, err := f.findChildContaining(name)
 	if err != nil {
 		return nil, &fs.PathError{
-			Op:   "open",
+			Op:   PathErrorOpOpen,
 			Path: name,
 			Err:  errors.Wrapf(err, "couldn't find a matching union child for %s", name),
 		}
@@ -222,15 +221,14 @@ func (f *UnionFS) ReadLink(name string) (string, error) {
 	// fmt.Printf("ReadLink(%s|%s)\n", f.Path(), name)
 	if name == "." {
 		return "", &fs.PathError{
-			Op:   "lstat",
+			Op:   PathErrorOpLstat,
 			Path: name,
 			Err:  errors.Errorf("file %s is the unionfs itself", name),
 		}
 	}
-	child, ok := f.Children[name]
-	if ok {
+	if _, ok := f.Children[name]; ok {
 		return "", &fs.PathError{
-			Op:   "lstat",
+			Op:   PathErrorOpLstat,
 			Path: name,
 			Err:  errors.Errorf("file %s is a union child of the unionfs", name),
 		}
@@ -239,7 +237,7 @@ func (f *UnionFS) ReadLink(name string) (string, error) {
 	childPath, child, err := f.findChildContaining(name)
 	if err != nil {
 		return "", &fs.PathError{
-			Op:   "lstat",
+			Op:   PathErrorOpLstat,
 			Path: name,
 			Err:  errors.Wrapf(err, "couldn't find a matching union child for %s", name),
 		}
@@ -262,7 +260,7 @@ func (f *UnionFS) StatLink(name string) (fs.FileInfo, error) {
 	childPath, child, err := f.findChildContaining(name)
 	if err != nil {
 		return nil, &fs.PathError{
-			Op:   "lstat",
+			Op:   PathErrorOpLstat,
 			Path: name,
 			Err:  errors.Wrapf(err, "couldn't find a matching union child for %s", name),
 		}

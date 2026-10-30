@@ -148,7 +148,7 @@ func consolidatePalletImports(
 	for _, imp := range imports {
 		importMappings, err := imp.Evaluate(loader)
 		if err != nil {
-			return nil, errors.Wrapf(err, "couldn't evaluate import group %s", imp.Import.Name)
+			return nil, errors.Wrapf(err, "couldn't evaluate import group %s", imp.Name)
 		}
 		for target, source := range importMappings {
 			if unionSource, ok := union[target]; ok && unionSource != source {

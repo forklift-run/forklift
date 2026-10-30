@@ -60,16 +60,16 @@ func LoadFSBundle(fsys ffs.PathedFS, subdirPath string) (b *FSBundle, err error)
 		FS: pkgfs,
 	}
 
-	if b.Bundle.Manifest, err = loadBundleManifest(b.FS, BundleManifestFile); err != nil {
+	if b.Manifest, err = loadBundleManifest(b.FS, BundleManifestFile); err != nil {
 		return nil, errors.Errorf("couldn't load bundle manifest")
 	}
-	for path, req := range b.Bundle.Manifest.Includes.Pallets {
+	for path, req := range b.Manifest.Includes.Pallets {
 		if req.Req.VersionLock.Version, err = req.Req.VersionLock.Decl.Version(); err != nil {
 			return nil, errors.Wrapf(
 				err, "couldn't determine requirement version of included pallet %s", path,
 			)
 		}
-		b.Bundle.Manifest.Includes.Pallets[path] = req
+		b.Manifest.Includes.Pallets[path] = req
 	}
 	return b, nil
 }

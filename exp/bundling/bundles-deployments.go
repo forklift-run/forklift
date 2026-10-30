@@ -16,16 +16,16 @@ import (
 // FSBundle: Deployments
 
 func (b *FSBundle) AddResolvedDepl(depl *fplt.ResolvedDepl) (err error) {
-	b.Manifest.Deploys[depl.Name] = depl.Depl.Decl
+	b.Manifest.Deploys[depl.Name] = depl.Decl
 	downloads := BundleDeplDownloads{}
 	if downloads.HTTPFile, err = depl.GetHTTPFileDownloadURLs(); err != nil {
 		return errors.Wrapf(
-			err, "couldn't determine HTTP file downloads for deployment %s", depl.Depl.Name,
+			err, "couldn't determine HTTP file downloads for deployment %s", depl.Name,
 		)
 	}
 	if downloads.OCIImage, err = depl.GetOCIImageDownloadNames(); err != nil {
 		return errors.Wrapf(
-			err, "couldn't determine OCI image downloads for deployment %s", depl.Depl.Name,
+			err, "couldn't determine OCI image downloads for deployment %s", depl.Name,
 		)
 	}
 	b.Manifest.Downloads[depl.Name] = downloads
@@ -35,18 +35,18 @@ func (b *FSBundle) AddResolvedDepl(depl *fplt.ResolvedDepl) (err error) {
 	)); err != nil {
 		return errors.Wrapf(
 			err, "couldn't bundle files from package %s for deployment %s from %s",
-			depl.Pkg.Path(), depl.Depl.Name, depl.Pkg.FS.Path(),
+			depl.Pkg.Path(), depl.Name, depl.Pkg.FS.Path(),
 		)
 	}
 
 	exports := BundleDeplExports{}
 	if exports.File, err = depl.GetFileExportTargets(); err != nil {
-		return errors.Wrapf(err, "couldn't determine file exports of deployment %s", depl.Depl.Name)
+		return errors.Wrapf(err, "couldn't determine file exports of deployment %s", depl.Name)
 	}
 	definesComposeApp, err := depl.DefinesComposeApp()
 	if err != nil {
 		return errors.Wrapf(
-			err, "couldn't check deployment %s for a Compose app", depl.Depl.Name,
+			err, "couldn't check deployment %s for a Compose app", depl.Name,
 		)
 	}
 	if definesComposeApp {

@@ -26,7 +26,7 @@ func FprintRequiredPallets(indent int, out io.Writer, pallet *fplt.FSPallet) err
 		return errors.Wrapf(err, "couldn't identify pallets")
 	}
 	slices.SortFunc(loadedPallets, func(a, b *fplt.FSPalletReq) int {
-		return fplt.CompareGitRepoReqs(a.PalletReq.GitRepoReq, b.PalletReq.GitRepoReq)
+		return fplt.CompareGitRepoReqs(a.GitRepoReq, b.GitRepoReq)
 	})
 	for _, pallet := range loadedPallets {
 		IndentedFprintf(indent, out, "%s\n", pallet.Path())

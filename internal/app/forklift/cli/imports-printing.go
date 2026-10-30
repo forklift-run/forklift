@@ -53,7 +53,7 @@ func FprintResolvedImport(
 	indent int, out io.Writer, imp *fplt.ResolvedImport, loader fplt.FSPalletLoader,
 ) error {
 	IndentedFprint(indent, out, "Import group")
-	if imp.Import.Decl.Disabled {
+	if imp.Decl.Disabled {
 		_, _ = fmt.Fprint(out, " (disabled!)")
 	}
 	_, _ = fmt.Fprintf(out, " %s:\n", imp.Name)

@@ -90,7 +90,7 @@ func fprintDepl(
 	indent int, out io.Writer, cache caching.PathedPalletCache, depl *fplt.ResolvedDepl,
 ) error {
 	IndentedFprint(indent, out, "Package deployment")
-	if depl.Depl.Decl.Disabled {
+	if depl.Decl.Disabled {
 		_, _ = fmt.Fprint(out, " (disabled!)")
 	}
 	_, _ = fmt.Fprintf(out, ": %s\n", depl.Name)

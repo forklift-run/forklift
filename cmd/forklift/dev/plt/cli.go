@@ -19,6 +19,20 @@ func (v Versions) Core() forklift.Versions {
 	return v.Staging.Core
 }
 
+const (
+	flagApply           = "apply"
+	flagCacheImg        = "cache-img"
+	flagCacheReq        = "cache-req"
+	flagIncludeDisabled = "include-disabled"
+	flagForce           = "force"
+	flagStage           = "stage"
+
+	argDeplName = "deployment_name"
+	argFilePath = "file_path"
+	argPkgPath  = "package_path"
+	argPltPath  = "pallet_path"
+)
+
 func MakeCmd(versions Versions) *cli.Command {
 	return &cli.Command{
 		Name:    "plt",
@@ -59,20 +73,20 @@ func makeUseSubcmds(versions Versions) []*cli.Command {
 			Action: planAction(versions),
 		},
 		&cli.Command{
-			Name:     "stage",
+			Name:     flagStage,
 			Category: category,
 			Usage:    "Builds and stages a bundle of the development pallet to be applied later",
 			Action:   stageAction(versions),
 			Flags: []cli.Flag{
 				&cli.BoolFlag{
-					Name:  "cache-img",
+					Name:  flagCacheImg,
 					Usage: "Download container images",
 					Value: true,
 				},
 			},
 		},
 		&cli.Command{
-			Name:     "apply",
+			Name:     flagApply,
 			Category: category,
 			Usage: "Builds, stages, and immediately applies a bundle of the development pallet to " +
 				"update the host to match the deployments specified by the development pallet",
@@ -91,7 +105,7 @@ func makeUseCacheSubcmds(versions Versions) []*cli.Command {
 			Action:   cacheAllAction(versions),
 			Flags: []cli.Flag{
 				&cli.BoolFlag{
-					Name:  "include-disabled",
+					Name:  flagIncludeDisabled,
 					Usage: "Also cache things needed for disabled package deployments",
 				},
 			},
@@ -111,14 +125,14 @@ func makeUseCacheSubcmds(versions Versions) []*cli.Command {
 			Action:   cacheDlAction(versions),
 		},
 		{
-			Name:     "cache-img",
+			Name:     flagCacheImg,
 			Aliases:  []string{"cache-images"},
 			Category: category,
 			Usage:    "Pre-downloads the Docker container images required by the development pallet",
 			Action:   cacheImgAction(versions),
 			Flags: []cli.Flag{
 				&cli.BoolFlag{
-					Name:  "include-disabled",
+					Name:  flagIncludeDisabled,
 					Usage: "Also download images for disabled package deployments",
 				},
 			},
@@ -152,7 +166,7 @@ func makeQuerySubcmds() []*cli.Command {
 				Action:   lsDlAction,
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
-						Name:  "include-disabled",
+						Name:  flagIncludeDisabled,
 						Usage: "Also list images for disabled package deployments",
 					},
 				},
@@ -165,7 +179,7 @@ func makeQuerySubcmds() []*cli.Command {
 				Action:   lsImgAction,
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
-						Name:  "include-disabled",
+						Name:  flagIncludeDisabled,
 						Usage: "Also list images for disabled package deployments",
 					},
 				},
@@ -215,7 +229,7 @@ func makeQueryPltFileSubcmds(category string) []*cli.Command {
 			Category: category,
 			Usage: "Lists non-directory files in the specified pallet which the development pallet may " +
 				"import files from",
-			ArgsUsage: "pallet_path [path_glob]",
+			ArgsUsage: argPltPath + " [path_glob]",
 			Action:    lsPltFileAction,
 		},
 		{
@@ -224,7 +238,7 @@ func makeQueryPltFileSubcmds(category string) []*cli.Command {
 			Category: category,
 			Usage: "Prints the absolute filesystem path of the specified file in the specified pallet " +
 				"which the development pallet may import files from",
-			ArgsUsage: "pallet_path file_path",
+			ArgsUsage: argPltPath + " " + argFilePath,
 			Action:    locatePltFileAction,
 		},
 		{
@@ -233,7 +247,7 @@ func makeQueryPltFileSubcmds(category string) []*cli.Command {
 			Category: category,
 			Usage: "Prints the specified file in the specified pallet which the development pallet may " +
 				"import files from",
-			ArgsUsage: "pallet_path file_path",
+			ArgsUsage: argPltPath + " " + argFilePath,
 			Action:    showPltFileAction,
 		},
 	}
@@ -247,7 +261,7 @@ func makeQueryPltFeatSubcmds(category string) []*cli.Command {
 			Category: category,
 			Usage: "Lists feature flags exposed by the specified pallet which the development pallet " +
 				"may import files from",
-			ArgsUsage: "pallet_path",
+			ArgsUsage: argPltPath,
 			Action:    lsPltFeatAction,
 		},
 		{
@@ -256,7 +270,7 @@ func makeQueryPltFeatSubcmds(category string) []*cli.Command {
 			Category: category,
 			Usage: "Prints the specified feature exposed by the specified pallet which the development " +
 				"pallet may import files from",
-			ArgsUsage: "pallet_path feature_name",
+			ArgsUsage: argPltPath + " feature_name",
 			Action:    showPltFeatAction,
 		},
 	}
@@ -297,14 +311,14 @@ func makeQueryFileSubcmds(category string) []*cli.Command {
 			Category: category,
 			Usage: "Prints the absolute filesystem path of the specified file in the development " +
 				"pallet",
-			ArgsUsage: "file_path",
+			ArgsUsage: argFilePath,
 			Action:    locateFileAction,
 		},
 		{
 			Name:      "show-file",
 			Category:  category,
 			Usage:     "Prints the specified file in the development pallet",
-			ArgsUsage: "file_path",
+			ArgsUsage: argFilePath,
 			Action:    showFileAction,
 		},
 	}
@@ -325,7 +339,7 @@ func makeQueryPkgSubcmds(category string) []*cli.Command {
 			Category: category,
 			Usage: "Prints the absolute filesystem path of a package available in the " +
 				"development pallet",
-			ArgsUsage: "package_path",
+			ArgsUsage: argPkgPath,
 			Action:    locatePkgAction,
 		},
 		{
@@ -333,7 +347,7 @@ func makeQueryPkgSubcmds(category string) []*cli.Command {
 			Aliases:   []string{"show-package"},
 			Category:  category,
 			Usage:     "Describes a package available in the development pallet",
-			ArgsUsage: "package_path",
+			ArgsUsage: argPkgPath,
 			Action:    showPkgAction,
 		},
 	}
@@ -353,7 +367,7 @@ func makeQueryDeplSubcmds(category string) []*cli.Command {
 			Aliases:   []string{"show-deployment"},
 			Category:  category,
 			Usage:     "Describes a package deployment specified by the development pallet",
-			ArgsUsage: "deployment_name",
+			ArgsUsage: argDeplName,
 			Action:    showDeplAction,
 		},
 		{
@@ -361,7 +375,7 @@ func makeQueryDeplSubcmds(category string) []*cli.Command {
 			Aliases:   []string{"locate-deployment-package"},
 			Category:  category,
 			Usage:     "Prints the absolute filesystem path of the package for the specified deployment",
-			ArgsUsage: "deployment_name",
+			ArgsUsage: argDeplName,
 			Action:    locateDeplPkgAction,
 			Flags: []cli.Flag{
 				&cli.BoolFlag{
@@ -412,7 +426,7 @@ func makeModifyFileSubcmds() []*cli.Command {
 			Name:      "edit-file",
 			Category:  category,
 			Usage:     "Edits the specified file in the development pallet",
-			ArgsUsage: "file_path",
+			ArgsUsage: argFilePath,
 			Action:    editFileAction,
 			Flags: []cli.Flag{
 				&cli.StringFlag{
@@ -427,7 +441,7 @@ func makeModifyFileSubcmds() []*cli.Command {
 			Aliases:   []string{"delete-file"},
 			Category:  category,
 			Usage:     "Removes the specified file in the development pallet",
-			ArgsUsage: "file_path",
+			ArgsUsage: argFilePath,
 			Action:    delFileAction,
 		},
 	}
@@ -448,7 +462,7 @@ func makeModifyPltSubcmds(versions Versions) []*cli.Command {
 			ArgsUsage: "[plt_path@version_query]...",
 			Flags: []cli.Flag{
 				&cli.BoolFlag{
-					Name: "cache-req",
+					Name: flagCacheReq,
 					Usage: "Download repositories and pallets required by this pallet after adding the " +
 						"the pallet",
 					Value: true,
@@ -472,7 +486,7 @@ func makeModifyPltSubcmds(versions Versions) []*cli.Command {
 			ArgsUsage: "plt_path...",
 			Flags: []cli.Flag{
 				&cli.BoolFlag{
-					Name: "force",
+					Name: flagForce,
 					Usage: "Remove specified pallet requirements even if some declared file imports " +
 						"depend on them",
 				},
@@ -488,17 +502,17 @@ func makeModifyDeplSubcmds( //nolint:funlen // this is already decomposed; it's 
 	const category = "Modify the pallet's package deployments"
 	baseFlags := []cli.Flag{
 		&cli.BoolFlag{
-			Name: "stage",
+			Name: flagStage,
 			Usage: "Immediately stage the pallet after making the modification (this flag is ignored " +
 				"if --apply is set)",
 		},
 		&cli.BoolFlag{
-			Name:  "cache-img",
+			Name:  flagCacheImg,
 			Usage: "Download container images (this flag is only used if --stage is set)",
 			Value: true,
 		},
 		&cli.BoolFlag{
-			Name:  "apply",
+			Name:  flagApply,
 			Usage: "Immediately apply the pallet after staging it",
 		},
 	}
@@ -508,7 +522,7 @@ func makeModifyDeplSubcmds( //nolint:funlen // this is already decomposed; it's 
 			Aliases:   []string{"add-deployment"},
 			Category:  category,
 			Usage:     "Adds (or re-adds) a package deployment to the pallet",
-			ArgsUsage: "deployment_name package_path...",
+			ArgsUsage: argDeplName + " " + argPkgPath + "...",
 			Flags: slices.Concat(
 				[]cli.Flag{
 					&cli.StringSliceFlag{
@@ -521,9 +535,9 @@ func makeModifyDeplSubcmds( //nolint:funlen // this is already decomposed; it's 
 						Usage: "Add a disabled package deployment",
 					},
 					&cli.BoolFlag{
-						Name: "force",
-						Usage: "Add specified deployment even if package_path cannot be resolved or the " +
-							"specified feature flags are not allowed for it",
+						Name: flagForce,
+						Usage: "Add specified deployment even if " + argPkgPath + " cannot be resolved or " +
+							"the specified feature flags are not allowed for it",
 					},
 				},
 				baseFlags,
@@ -535,7 +549,7 @@ func makeModifyDeplSubcmds( //nolint:funlen // this is already decomposed; it's 
 			Aliases:   []string{"delete-deployment", "delete-deployments"},
 			Category:  category,
 			Usage:     "Removes deployment from the pallet",
-			ArgsUsage: "deployment_name...",
+			ArgsUsage: argDeplName + "...",
 			Flags:     baseFlags,
 			Action:    delDeplAction(versions),
 		},
@@ -544,11 +558,11 @@ func makeModifyDeplSubcmds( //nolint:funlen // this is already decomposed; it's 
 			Aliases:   []string{"set-deployment-package"},
 			Category:  category,
 			Usage:     "Sets the path of the package to deploy in the specified deployment",
-			ArgsUsage: "deployment_name package_path...",
+			ArgsUsage: argDeplName + " " + argPkgPath + "...",
 			Flags: slices.Concat(
 				[]cli.Flag{
 					&cli.BoolFlag{
-						Name: "force",
+						Name: flagForce,
 						Usage: "Use the specified package path even if it cannot be resolved or makes the " +
 							"enabled package features invalid",
 					},
@@ -568,11 +582,11 @@ func makeModifyDeplSubcmds( //nolint:funlen // this is already decomposed; it's 
 			},
 			Category:  category,
 			Usage:     "Enables the specified package features in the specified deployment",
-			ArgsUsage: "deployment_name feature_name...",
+			ArgsUsage: argDeplName + " feature_name...",
 			Flags: slices.Concat(
 				[]cli.Flag{
 					&cli.BoolFlag{
-						Name: "force",
+						Name: flagForce,
 						Usage: "Enable the specified package features even if they're not allowed by the " +
 							"deployment's package",
 					},
@@ -592,7 +606,7 @@ func makeModifyDeplSubcmds( //nolint:funlen // this is already decomposed; it's 
 			},
 			Category:  category,
 			Usage:     "Disables the specified package features in the specified deployment",
-			ArgsUsage: "deployment_name feature_name...",
+			ArgsUsage: argDeplName + " feature_name...",
 			Flags:     baseFlags,
 			Action:    delDeplFeatAction(versions),
 		},
@@ -601,7 +615,7 @@ func makeModifyDeplSubcmds( //nolint:funlen // this is already decomposed; it's 
 			Aliases:   []string{"set-deployment-disabled", "disable-depl", "disable-deployment"},
 			Category:  category,
 			Usage:     "Disables the specified deployment",
-			ArgsUsage: "deployment_name",
+			ArgsUsage: argDeplName,
 			Flags:     baseFlags,
 			Action:    setDeplDisabledAction(versions, true),
 		},
@@ -610,7 +624,7 @@ func makeModifyDeplSubcmds( //nolint:funlen // this is already decomposed; it's 
 			Aliases:   []string{"unset-deployment-disabled", "enable-depl", "enable-deployment"},
 			Category:  category,
 			Usage:     "Enables the specified deployment",
-			ArgsUsage: "deployment_name",
+			ArgsUsage: argDeplName,
 			Flags:     baseFlags,
 			Action:    setDeplDisabledAction(versions, false),
 		},

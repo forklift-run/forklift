@@ -76,7 +76,7 @@ func editFileAction(c *cli.Context) error {
 		return err
 	}
 
-	return fcli.EditFileWithCOW(plt, c.Args().First(), c.String("editor"))
+	return fcli.EditFileWithCOW(c.Context, plt, c.Args().First(), c.String("editor"))
 }
 
 // del-file

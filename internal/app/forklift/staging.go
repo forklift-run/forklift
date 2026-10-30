@@ -115,10 +115,7 @@ func newBundlePalletInclusion(
 		Req:      req.PalletReq,
 		Includes: make(map[string]fbun.BundlePalletInclusion),
 	}
-	for {
-		if palletCache == nil {
-			break
-		}
+	for palletCache != nil {
 		layeredCache, ok := palletCache.(*caching.LayeredPalletCache)
 		if !ok {
 			break

@@ -48,7 +48,7 @@ func loadFSPkg(fsys ffs.PathedFS, subdirPath string) (p *FSPkg, err error) {
 			err, "couldn't enter directory %s from fs at %s", subdirPath, fsys.Path(),
 		)
 	}
-	if p.Pkg.Decl, err = LoadPkgDecl(p.FS, PkgDeclFile); err != nil {
+	if p.Decl, err = LoadPkgDecl(p.FS, PkgDeclFile); err != nil {
 		return nil, errors.Wrapf(err, "couldn't load package declaration")
 	}
 	return p, nil

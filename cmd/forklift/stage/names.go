@@ -5,9 +5,10 @@ import (
 	"slices"
 	"strconv"
 
-	"github.com/forklift-run/forklift/exp/staging"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli/v2"
+
+	"github.com/forklift-run/forklift/exp/staging"
 )
 
 const (

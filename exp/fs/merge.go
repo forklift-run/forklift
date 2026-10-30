@@ -87,7 +87,7 @@ func (f *MergeFS) GetFileRef(name string) (FileRef, error) {
 	switch {
 	default:
 		return FileRef{}, &fs.PathError{
-			Op:   "resolve",
+			Op:   PathErrorOpResolve,
 			Path: name,
 			Err:  errors.Wrapf(err, "couldn't stat file %s in overlay", name),
 		}
@@ -102,21 +102,21 @@ func (f *MergeFS) GetFileRef(name string) (FileRef, error) {
 		if !ok {
 			if !f.impliedDirs.Has(name) {
 				return FileRef{}, &fs.PathError{
-					Op:   "resolve",
+					Op:   PathErrorOpResolve,
 					Path: name,
 					Err:  errors.Errorf("file %s not found in either overlay or underlay", name),
 				}
 			}
 			// fmt.Printf("  %s is an implied dir!\n", name)
 			return FileRef{}, &fs.PathError{
-				Op:   "resolve",
+				Op:   PathErrorOpResolve,
 				Path: name,
 				Err:  errors.Errorf("file %s is a directory implied by the underlay", name),
 			}
 		}
 		if _, err := fs.Stat(ref.FS, ref.Path); err != nil {
 			return FileRef{}, &fs.PathError{
-				Op:   "resolve",
+				Op:   PathErrorOpResolve,
 				Path: name,
 				Err: errors.Wrapf(
 					err, "couldn't stat file %s in underlay as %s", name, path.Join(ref.FS.Path(), ref.Path),
@@ -173,7 +173,7 @@ func (f *MergeFS) Open(name string) (fs.File, error) {
 	switch {
 	default:
 		return nil, &fs.PathError{
-			Op:   "open",
+			Op:   PathErrorOpOpen,
 			Path: name,
 			Err:  errors.Wrapf(err, "couldn't open file %s in overlay", name),
 		}
@@ -182,7 +182,7 @@ func (f *MergeFS) Open(name string) (fs.File, error) {
 		if !ok {
 			if !f.impliedDirs.Has(name) {
 				return nil, &fs.PathError{
-					Op:   "open",
+					Op:   PathErrorOpOpen,
 					Path: name,
 					Err:  errors.Errorf("file %s not found in either overlay or underlay", name),
 				}
@@ -193,7 +193,7 @@ func (f *MergeFS) Open(name string) (fs.File, error) {
 		file, err := ref.FS.Open(ref.Path)
 		if err != nil {
 			return nil, &fs.PathError{
-				Op:   "open",
+				Op:   PathErrorOpOpen,
 				Path: name,
 				Err: errors.Wrapf(
 					err, "couldn't open file %s in underlay as %s", name, path.Join(ref.FS.Path(), ref.Path),
@@ -242,14 +242,14 @@ func (f *MergeFS) ReadDir(name string) (entries []fs.DirEntry, err error) {
 	if err == nil {
 		if !info.IsDir() {
 			return nil, &fs.PathError{
-				Op:   "read",
+				Op:   PathErrorOpRead,
 				Path: name,
 				Err:  errors.Wrapf(err, "%s is a non-directory file in overlay", name),
 			}
 		}
 		if entries, err = fs.ReadDir(f.Overlay, name); err != nil {
 			return nil, &fs.PathError{
-				Op:   "read",
+				Op:   PathErrorOpRead,
 				Path: name,
 				Err:  errors.Wrapf(err, "couldn't read directory %s in overlay", name),
 			}
@@ -305,7 +305,7 @@ func matchUnderlayRef(
 	match, err := doublestar.Match(prefixPattern, underlayTarget)
 	if err != nil {
 		return nil, &fs.PathError{
-			Op:   "read",
+			Op:   PathErrorOpRead,
 			Path: fileName,
 			Err:  errors.Wrap(err, "couldn't enumerate files in underlays"),
 		}
@@ -321,7 +321,7 @@ func matchUnderlayRef(
 	if fsys, ok := underlayRef.FS.(ReadLinkFS); ok {
 		if entry.fileInfo, err = fsys.StatLink(underlayRef.Path); err != nil {
 			return nil, &fs.PathError{
-				Op:   "read",
+				Op:   PathErrorOpRead,
 				Path: fileName,
 				Err: errors.Wrapf(
 					err, "couldn't stat (without following symlinks) file %s in %s",
@@ -331,7 +331,7 @@ func matchUnderlayRef(
 		}
 	} /* else if entry.fileInfo, err = fs.Stat(underlayRef.FS, underlayRef.Path); err != nil {
 		return nil, &fs.PathError{
-			Op:   "read",
+			Op:   PathErrorOpRead,
 			Path: fileName,
 			Err:  errors.Wrapf(err, "couldn't stat file %s in %s", entry.ref.Path, entry.ref.FS.Path()),
 		}
@@ -356,7 +356,7 @@ func (f *MergeFS) ReadFile(name string) ([]byte, error) {
 		if !ok {
 			if f.impliedDirs.Has(name) {
 				return nil, &fs.PathError{
-					Op:   "read",
+					Op:   PathErrorOpRead,
 					Path: name,
 					Err:  errors.Errorf("file %s is a directory implied by the underlay", name),
 				}
@@ -385,7 +385,7 @@ func (f *MergeFS) Stat(name string) (fs.FileInfo, error) {
 	switch {
 	default:
 		return nil, &fs.PathError{
-			Op:   "stat",
+			Op:   PathErrorOpStat,
 			Path: name,
 			Err:  errors.Wrapf(err, "couldn't stat file %s in overlay", name),
 		}
@@ -397,7 +397,7 @@ func (f *MergeFS) Stat(name string) (fs.FileInfo, error) {
 		if !ok {
 			if !f.impliedDirs.Has(name) {
 				return nil, &fs.PathError{
-					Op:   "stat",
+					Op:   PathErrorOpStat,
 					Path: name,
 					Err:  errors.Errorf("file %s not found in either overlay or underlay", name),
 				}
@@ -408,7 +408,7 @@ func (f *MergeFS) Stat(name string) (fs.FileInfo, error) {
 		info, err := fs.Stat(ref.FS, ref.Path)
 		if err != nil {
 			return nil, &fs.PathError{
-				Op:   "stat",
+				Op:   PathErrorOpStat,
 				Path: name,
 				Err: errors.Wrapf(
 					err, "couldn't stat file %s in underlay as %s", name, path.Join(ref.FS.Path(), ref.Path),
@@ -430,7 +430,7 @@ func (f *MergeFS) ReadLink(name string) (string, error) {
 	switch {
 	default:
 		return "", &fs.PathError{
-			Op:   "lstat",
+			Op:   PathErrorOpLstat,
 			Path: name,
 			Err: errors.Wrapf(
 				err, "couldn't stat (without following symlinks) file %s in overlay", name,
@@ -440,7 +440,7 @@ func (f *MergeFS) ReadLink(name string) (string, error) {
 		ref, ok := f.underlayRefs[name]
 		if !ok {
 			return "", &fs.PathError{
-				Op:   "lstat",
+				Op:   PathErrorOpLstat,
 				Path: name,
 				Err:  errors.Errorf("file %s not a symlink in overlay or underlay", name),
 			}
@@ -448,7 +448,7 @@ func (f *MergeFS) ReadLink(name string) (string, error) {
 		target, err := ReadLink(ref.FS, ref.Path)
 		if err != nil {
 			return "", &fs.PathError{
-				Op:   "lstat",
+				Op:   PathErrorOpLstat,
 				Path: name,
 				Err: errors.Wrapf(
 					err, "couldn't stat file (without following symlinks) %s in underlay as %s",
@@ -469,7 +469,7 @@ func (f *MergeFS) StatLink(name string) (fs.FileInfo, error) {
 	switch {
 	default:
 		return nil, &fs.PathError{
-			Op:   "lstat",
+			Op:   PathErrorOpLstat,
 			Path: name,
 			Err: errors.Wrapf(
 				err, "couldn't stat (without following symlinks) file %s in overlay", name,
@@ -483,7 +483,7 @@ func (f *MergeFS) StatLink(name string) (fs.FileInfo, error) {
 		if !ok {
 			if !f.impliedDirs.Has(name) {
 				return nil, &fs.PathError{
-					Op:   "lstat",
+					Op:   PathErrorOpLstat,
 					Path: name,
 					Err:  errors.Errorf("file %s not found in either overlay or underlay", name),
 				}
@@ -494,7 +494,7 @@ func (f *MergeFS) StatLink(name string) (fs.FileInfo, error) {
 		info, err := StatLink(ref.FS, ref.Path)
 		if err != nil {
 			return nil, &fs.PathError{
-				Op:   "lstat",
+				Op:   PathErrorOpLstat,
 				Path: name,
 				Err: errors.Wrapf(
 					err, "couldn't stat file (without following symlinks) %s in underlay as %s",
