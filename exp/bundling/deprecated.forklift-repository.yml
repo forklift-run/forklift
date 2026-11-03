@@ -1,0 +1,8 @@
+# Note: this file is deprecated, and is only provided for backwards-compatibility so that versions
+# of Forklift from v0.8.0 and before can still load this bundle. However, this file will be removed
+# the next time a backwards-incompatible change is made to the pallet bundle format.
+forklift-version: v0.8.0-alpha.6
+repository:
+    path: ""
+    description: ""
+    readme-file: ""
