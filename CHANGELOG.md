@@ -17,7 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - (Breaking change; spec: packages, pallets) Forklift no longer has a separate concept of "repositories"; instead, all repository functionality has been merged into pallets. Support has been removed for `forklift-repository.yml` files as well as files in `(pallet)/requirements/repositories`.
-- (Breaking change; spec: bundling) Forklift no longer creates or expects a file at `(bundle)/packages/forklift-repository.yml` in pallet bundles.
+- (Breaking change; spec: bundling) Forklift no longer expects a file at `(bundle)/packages/forklift-repository.yml` in pallet bundles.
+
+### Deprecated
+
+- (Breaking change; spec: bundling) Forklift's creation of a file at `(bundle)/packages/forklift-repository.yml` in pallet bundles is maintained for compatibility with the previous version of Forklift (so that bundles created by this version of Forklift can still be used by the previous version of Forklift), but it will be removed the next time the pallet bundle format changes.
 
 ### Fixed
 

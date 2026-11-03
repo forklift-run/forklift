@@ -1,11 +1,15 @@
 package bundling
 
 import (
+	_ "embed"
+	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
 
+	ffs "github.com/forklift-run/forklift/exp/fs"
 	fpkg "github.com/forklift-run/forklift/exp/packaging"
 	fplt "github.com/forklift-run/forklift/exp/pallets"
 )
@@ -18,6 +22,20 @@ const packagesDirName = "packages"
 func (b *FSBundle) getPackagesPath() string {
 	return path.Join(b.FS.Path(), packagesDirName)
 }
+
+func (b *FSBundle) WriteRepoDefFile() error {
+	if err := ffs.EnsureExists(b.getPackagesPath()); err != nil {
+		return err
+	}
+	const perm = 0o644
+	return os.WriteFile(
+		filepath.FromSlash(path.Join(b.getPackagesPath(), "forklift-repository.yml")),
+		[]byte(repoDefFileString), perm,
+	)
+}
+
+//go:embed deprecated.forklift-repository.yml
+var repoDefFileString string
 
 // FSBundle: FSPkgLoader
 

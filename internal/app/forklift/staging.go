@@ -240,6 +240,12 @@ func BuildBundle(
 	if err := outputBundle.SetBundledPallet(merged); err != nil {
 		return errors.Wrapf(err, "couldn't write pallet %s into bundle", merged.Decl.Pallet.Path)
 	}
+	if err := outputBundle.WriteRepoDefFile(); err != nil {
+		// Note: kept for backwards compatibility with Forklift versions at 0.8.0 and below. This file
+		// is deprecated and will be removed the next time there is an incompatible change made to the
+		// bundle format.
+		return errors.Wrap(err, "couldn't write repo declaration into bundle")
+	}
 	if err = outputBundle.WriteFileExports(dlCache); err != nil {
 		return errors.Wrap(err, "couldn't write file exports into bundle")
 	}
