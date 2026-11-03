@@ -53,7 +53,8 @@ func cacheImgAction(versions Versions) cli.ActionFunc {
 			os.Stderr, "Downloading Docker container images specified by the development pallet...",
 		)
 		if err := fcli.DownloadImages(
-			0, plt, caches.pmp, c.String("platform"), c.Bool("include-disabled"), c.Bool("parallel"),
+			c.Context, 0, plt, caches.pmp,
+			c.String("platform"), c.Bool("include-disabled"), c.Bool("parallel"),
 		); err != nil {
 			return err
 		}

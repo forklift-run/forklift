@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"sort"
@@ -79,13 +78,13 @@ func delAllAction(c *cli.Context) error {
 
 // del-img
 
-func delImgAction(_ *cli.Context) error {
+func delImgAction(c *cli.Context) error {
 	fmt.Fprintln(os.Stderr, "Removing unused Docker container images...")
 	client, err := docker.NewClient()
 	if err != nil {
 		return errors.Wrap(err, "couldn't make Docker API client")
 	}
-	report, err := client.PruneUnusedImages(context.Background())
+	report, err := client.PruneUnusedImages(c.Context)
 	if err != nil {
 		return errors.Wrap(err, "couldn't prune unused Docker container images")
 	}

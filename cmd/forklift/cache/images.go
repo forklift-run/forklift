@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"context"
 	"fmt"
 	"sort"
 
@@ -21,7 +20,7 @@ func lsImgAction(c *cli.Context) error {
 		return errors.Wrap(err, "couldn't make Docker API client")
 	}
 
-	imgs, err := client.ListImages(context.Background(), c.Args().First())
+	imgs, err := client.ListImages(c.Context, c.Args().First())
 	if err != nil {
 		return errors.Wrapf(err, "couldn't list local Docker images")
 	}
@@ -47,7 +46,7 @@ func showImgAction(c *cli.Context) error {
 	}
 
 	imageHash := c.Args().First()
-	image, err := client.InspectImage(context.Background(), imageHash)
+	image, err := client.InspectImage(c.Context, imageHash)
 	if err != nil {
 		return errors.Wrapf(err, "couldn't inspect image %s", imageHash)
 	}

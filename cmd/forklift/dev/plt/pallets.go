@@ -185,7 +185,7 @@ func cacheAllAction(versions Versions) cli.ActionFunc {
 		}
 
 		if err = fcli.CacheAllReqs(
-			0, plt, caches.m, caches.pm, caches.d,
+			c.Context, 0, plt, caches.m, caches.pm, caches.d,
 			c.String("platform"), c.Bool("include-disabled"), c.Bool("parallel"),
 		); err != nil {
 			return err
@@ -284,7 +284,7 @@ func stageAction(versions Versions) cli.ActionFunc {
 			return err
 		}
 		if _, err = fcli.StagePallet(
-			0, plt, stageStore, caches.staging(), c.String("exports"),
+			c.Context, 0, plt, stageStore, caches.staging(), c.String("exports"),
 			versions.Staging, !c.Bool("cache-img"), c.String("platform"), c.Bool("parallel"),
 			c.Bool("ignore-tool-version"),
 		); err != nil {
@@ -327,7 +327,7 @@ func applyAction(versions Versions) cli.ActionFunc {
 			return err
 		}
 		index, err := fcli.StagePallet(
-			0, plt, stageStore, caches.staging(), c.String("exports"),
+			c.Context, 0, plt, stageStore, caches.staging(), c.String("exports"),
 			versions.Staging, false, c.String("platform"), c.Bool("parallel"),
 			c.Bool("ignore-tool-version"),
 		)
