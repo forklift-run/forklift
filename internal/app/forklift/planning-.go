@@ -4,7 +4,7 @@ import (
 	"cmp"
 	"slices"
 
-	"github.com/docker/compose/v2/pkg/api"
+	"github.com/docker/compose/v5/pkg/api"
 	"github.com/pkg/errors"
 
 	fplt "github.com/forklift-run/forklift/exp/pallets"

@@ -89,10 +89,12 @@ func delImgAction(_ *cli.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "couldn't prune unused Docker container images")
 	}
-	sort.Slice(report.ImagesDeleted, func(i, j int) bool {
-		return docker.CompareDeletedImages(report.ImagesDeleted[i], report.ImagesDeleted[j]) < 0
+	sort.Slice(report.Report.ImagesDeleted, func(i, j int) bool {
+		return docker.CompareDeletedImages(
+			report.Report.ImagesDeleted[i], report.Report.ImagesDeleted[j],
+		) < 0
 	})
-	for _, deleted := range report.ImagesDeleted {
+	for _, deleted := range report.Report.ImagesDeleted {
 		if deleted.Untagged != "" {
 			fmt.Fprintf(os.Stderr, "Untagged %s\n", deleted.Untagged)
 		}
@@ -101,7 +103,8 @@ func delImgAction(_ *cli.Context) error {
 		}
 	}
 	fmt.Fprintf(
-		os.Stderr, "Total reclaimed space: %s\n", units.HumanSize(float64(report.SpaceReclaimed)),
+		os.Stderr, "Total reclaimed space: %s\n",
+		units.HumanSize(float64(report.Report.SpaceReclaimed)),
 	)
 	return nil
 }
