@@ -18,6 +18,7 @@ require (
 	github.com/h2non/filetype v1.1.3
 	github.com/moby/moby/api v1.56.1
 	github.com/moby/moby/client v0.6.1
+	github.com/moby/term v0.5.2
 	github.com/muesli/reflow v0.3.0
 	github.com/opencontainers/image-spec v1.1.1
 	github.com/pkg/errors v0.9.1
@@ -215,7 +216,6 @@ require (
 	github.com/moby/sys/symlink v0.3.0 // indirect
 	github.com/moby/sys/user v0.4.1 // indirect
 	github.com/moby/sys/userns v0.2.1 // indirect
-	github.com/moby/term v0.5.2 // indirect
 	github.com/moricho/tparallel v0.3.2 // indirect
 	github.com/morikuni/aec v1.1.0 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
