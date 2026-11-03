@@ -50,7 +50,7 @@ func (b *FSBundle) AddResolvedDepl(depl *fplt.ResolvedDepl) (err error) {
 		)
 	}
 	if definesComposeApp {
-		exports.ComposeApp, err = b.makeComposeAppSummary(depl)
+		exports.ComposeApp, err = b.makeComposeAppSummary(depl, ComposeEnvVars(b.Path()))
 		if err != nil {
 			return errors.Wrap(err, "couldn't make summary of Compose app definition")
 		}
@@ -72,7 +72,20 @@ func (b *FSBundle) AddResolvedDepl(depl *fplt.ResolvedDepl) (err error) {
 	return nil
 }
 
-func (b *FSBundle) makeComposeAppSummary(depl *fplt.ResolvedDepl) (BundleDeplComposeApp, error) {
+func ComposeEnvVars(bundlePath string) map[string]string {
+	if bundlePath == "" {
+		return map[string]string{
+			"FORKLIFT_EXPORTS": "/dev/null",
+		}
+	}
+	return map[string]string{
+		"FORKLIFT_EXPORTS": path.Join(bundlePath, exportsDirName),
+	}
+}
+
+func (b *FSBundle) makeComposeAppSummary(
+	depl *fplt.ResolvedDepl, envVars map[string]string,
+) (BundleDeplComposeApp, error) {
 	bundlePkg, err := b.LoadFSPkg(depl.Decl.Package, "")
 	if err != nil {
 		return BundleDeplComposeApp{}, errors.Wrapf(
@@ -85,7 +98,7 @@ func (b *FSBundle) makeComposeAppSummary(depl *fplt.ResolvedDepl) (BundleDeplCom
 		Pkg:    bundlePkg,
 	}
 
-	return makeComposeAppSummary(depl, b.FS.Path())
+	return makeComposeAppSummary(depl, b.FS.Path(), envVars)
 }
 
 func (b *FSBundle) LoadDepl(name string) (fplt.Depl, error) {

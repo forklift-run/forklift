@@ -276,13 +276,13 @@ func MakeOverlayCache(
 // Apply
 
 func ApplyReconciliationChange(
-	ctx context.Context, change *ReconciliationChange, dc *docker.Client,
+	ctx context.Context, change *ReconciliationChange, envVars map[string]string, dc *docker.Client,
 ) error {
 	switch change.Type {
 	default:
 		return errors.Errorf("unknown change type '%s'", change.Type)
 	case AddReconciliationChange:
-		if err := deployApp(ctx, change.Depl, change.Name, dc); err != nil {
+		if err := deployApp(ctx, change.Depl, change.Name, envVars, dc); err != nil {
 			return errors.Wrapf(err, "couldn't add %s", change.Name)
 		}
 		return nil
@@ -293,7 +293,7 @@ func ApplyReconciliationChange(
 		}
 		return nil
 	case UpdateReconciliationChange:
-		if err := deployApp(ctx, change.Depl, change.Name, dc); err != nil {
+		if err := deployApp(ctx, change.Depl, change.Name, envVars, dc); err != nil {
 			return errors.Wrapf(err, "couldn't add %s", change.Name)
 		}
 		return nil
@@ -301,7 +301,8 @@ func ApplyReconciliationChange(
 }
 
 func deployApp(
-	ctx context.Context, depl *fplt.ResolvedDepl, name string, dc *docker.Client,
+	ctx context.Context, depl *fplt.ResolvedDepl, name string, envVars map[string]string,
+	dc *docker.Client,
 ) error {
 	definesApp, err := depl.DefinesComposeApp()
 	if err != nil {
@@ -313,7 +314,7 @@ func deployApp(
 		return errors.Errorf("package deployment %s has no Compose app to deploy", depl.Name)
 	}
 
-	appDef, err := depl.LoadComposeAppDefinition(true)
+	appDef, err := depl.LoadComposeAppDefinition(true, envVars)
 	if err != nil {
 		return errors.Wrap(err, "couldn't load Compose app definition")
 	}

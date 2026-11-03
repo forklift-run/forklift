@@ -46,14 +46,16 @@ func (d *ResolvedDepl) DefinesComposeApp() (bool, error) {
 }
 
 // LoadComposeAppDefinition loads the deployment's Docker Compose app.
-func (d *ResolvedDepl) LoadComposeAppDefinition(resolvePaths bool) (*dct.Project, error) {
+func (d *ResolvedDepl) LoadComposeAppDefinition(
+	resolvePaths bool, envVars map[string]string,
+) (*dct.Project, error) {
 	composeFiles, err := d.GetComposeFilenames()
 	if err != nil {
 		return nil, errors.Wrap(err, "couldn't determine Compose files for deployment")
 	}
 
 	appDef, err := compose.LoadAppDefinition(
-		d.Pkg.FS, GetComposeAppName(d.Name), composeFiles, nil, resolvePaths,
+		d.Pkg.FS, GetComposeAppName(d.Name), composeFiles, envVars, resolvePaths,
 	)
 	if err != nil {
 		return nil, errors.Wrapf(
