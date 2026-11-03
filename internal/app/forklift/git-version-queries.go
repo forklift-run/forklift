@@ -15,17 +15,21 @@ import (
 func ResolveVersionQueryUsingRepo(
 	localPath, versionQuery string,
 ) (l versioning.Lock, err error) {
-	if versionQuery == "" {
-		return l, errors.New("empty version queries are not yet supported")
-	}
-
 	gitRepo, err := git.Open(localPath)
 	if err != nil {
 		return l, errors.Wrapf(err, "couldn't open %s as a git repo", localPath)
 	}
-	commit, err := queryRefs(gitRepo, versionQuery)
-	if err != nil {
-		return l, err
+
+	commit := ""
+	if versionQuery == "" {
+		if commit, err = gitRepo.GetHead(); err != nil {
+			return l, errors.Errorf("couldn't look up HEAD of repo %s", localPath)
+		}
+	}
+	if commit == "" {
+		if commit, err = queryRefs(gitRepo, versionQuery); err != nil {
+			return l, err
+		}
 	}
 	if commit == "" {
 		commit, err = gitRepo.GetCommitFullHash(versionQuery)

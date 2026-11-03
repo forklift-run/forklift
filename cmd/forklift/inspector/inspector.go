@@ -10,12 +10,25 @@ import (
 
 	ffs "github.com/forklift-run/forklift/exp/fs"
 	fws "github.com/forklift-run/forklift/exp/workspaces"
+	"github.com/forklift-run/forklift/internal/app/forklift"
 	fcli "github.com/forklift-run/forklift/internal/app/forklift/cli"
 )
 
-// resolve-git-repo
+// show-repo-version
 
-func resolveGitRepoAction(ctx context.Context, c *cli.Command) error {
+func showRepoVersionAction(ctx context.Context, c *cli.Command) error {
+	localPath := c.Args().First()
+	lock, err := forklift.ResolveVersionQueryUsingRepo(localPath, "")
+	if err != nil {
+		return errors.Wrapf(err, "couldn't determine version of %s", localPath)
+	}
+	fmt.Println(lock.Version)
+	return nil
+}
+
+// resolve-repo
+
+func resolveRepoAction(ctx context.Context, c *cli.Command) error {
 	workspace, err := ensureWorkspace(c.String("workspace"))
 	if err != nil {
 		return err
