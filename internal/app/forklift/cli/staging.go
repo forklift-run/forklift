@@ -157,19 +157,24 @@ func ApplyNextOrCurrentBundle(
 	return nil
 }
 
-func applyBundle(indent int, bundle *fbun.FSBundle, parallel bool) error {
+func applyBundle(
+	indent int, bundle *fbun.FSBundle, parallel bool,
+) error {
 	concurrentPlan, serialPlan, err := Plan(indent, bundle, bundle, parallel)
 	if err != nil {
 		return err
 	}
 
+	envVars := fbun.ComposeEnvVars(bundle.Path())
 	if serialPlan != nil {
-		return applyChangesSerially(indent, serialPlan)
+		return applyChangesSerially(indent, serialPlan, envVars)
 	}
-	return applyChangesConcurrently(indent, concurrentPlan)
+	return applyChangesConcurrently(indent, concurrentPlan, envVars)
 }
 
-func applyChangesSerially(indent int, plan []*forklift.ReconciliationChange) error {
+func applyChangesSerially(
+	indent int, plan []*forklift.ReconciliationChange, envVars map[string]string,
+) error {
 	const dockerIndent = 2 // docker's indentation is flaky, so we indent extra
 	dc, err := docker.NewClient(
 		// we want to send all of Docker's log messages to stderr:
@@ -185,7 +190,9 @@ func applyChangesSerially(indent int, plan []*forklift.ReconciliationChange) err
 	indent++
 	for _, change := range plan {
 		fmt.Fprintln(os.Stderr)
-		if err := applyReconciliationChange(context.Background(), indent, change, dc); err != nil {
+		if err := applyReconciliationChange(
+			context.Background(), indent, change, envVars, dc,
+		); err != nil {
 			return errors.Wrapf(err, "couldn't apply change '%s'", change.PlanString())
 		}
 	}
@@ -193,7 +200,8 @@ func applyChangesSerially(indent int, plan []*forklift.ReconciliationChange) err
 }
 
 func applyReconciliationChange(
-	ctx context.Context, indent int, change *forklift.ReconciliationChange, dc *docker.Client,
+	ctx context.Context, indent int, change *forklift.ReconciliationChange, envVars map[string]string,
+	dc *docker.Client,
 ) error {
 	switch change.Type {
 	default:
@@ -214,11 +222,11 @@ func applyReconciliationChange(
 			change.Depl.Name, change.Name,
 		)
 	}
-	return forklift.ApplyReconciliationChange(ctx, change, dc)
+	return forklift.ApplyReconciliationChange(ctx, change, envVars, dc)
 }
 
 func applyChangesConcurrently(
-	indent int, plan structures.Digraph[*forklift.ReconciliationChange],
+	indent int, plan structures.Digraph[*forklift.ReconciliationChange], envVars map[string]string,
 ) error {
 	const dockerIndent = 2 // docker's indentation is flaky, so we indent extra
 	dc, err := docker.NewClient(
@@ -249,7 +257,9 @@ func applyChangesConcurrently(
 			for dep := range deps {
 				<-changeDone[dep]
 			}
-			if err := applyReconciliationChange(context.Background(), indent, change, dc); err != nil {
+			if err := applyReconciliationChange(
+				context.Background(), indent, change, envVars, dc,
+			); err != nil {
 				return errors.Wrapf(err, "couldn't apply change '%s'", change.PlanString())
 			}
 			return nil

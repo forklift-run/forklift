@@ -6,6 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	fbun "github.com/forklift-run/forklift/exp/bundling"
 	fplt "github.com/forklift-run/forklift/exp/pallets"
 	"github.com/forklift-run/forklift/exp/structures"
 )
@@ -37,7 +38,7 @@ func ListRequiredImages(
 			continue
 		}
 
-		appDef, err := depl.LoadComposeAppDefinition(false)
+		appDef, err := depl.LoadComposeAppDefinition(false, fbun.ComposeEnvVars(""))
 		if err != nil {
 			return nil, errors.Wrap(err, "couldn't load Compose app definition")
 		}

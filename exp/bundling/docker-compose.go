@@ -13,9 +13,9 @@ import (
 )
 
 func makeComposeAppSummary(
-	depl *fplt.ResolvedDepl, bundleRoot string,
+	depl *fplt.ResolvedDepl, bundleRoot string, envVars map[string]string,
 ) (BundleDeplComposeApp, error) {
-	appDef, err := depl.LoadComposeAppDefinition(true)
+	appDef, err := depl.LoadComposeAppDefinition(true, envVars)
 	if err != nil {
 		return BundleDeplComposeApp{}, errors.Wrap(err, "couldn't load Compose app definition")
 	}

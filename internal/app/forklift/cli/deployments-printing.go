@@ -10,6 +10,7 @@ import (
 	dct "github.com/compose-spec/compose-go/v2/types"
 	"github.com/pkg/errors"
 
+	fbun "github.com/forklift-run/forklift/exp/bundling"
 	"github.com/forklift-run/forklift/exp/caching"
 	ffs "github.com/forklift-run/forklift/exp/fs"
 	fpkg "github.com/forklift-run/forklift/exp/packaging"
@@ -69,7 +70,7 @@ func FprintResolvedDepl(
 		return nil
 	}
 
-	appDef, err := resolved.LoadComposeAppDefinition(false)
+	appDef, err := resolved.LoadComposeAppDefinition(false, fbun.ComposeEnvVars(""))
 	if err != nil {
 		return errors.Wrap(err, "couldn't load Compose app definition")
 	}
