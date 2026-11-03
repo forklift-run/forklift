@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - (cli) When applying a pallet bundle, Forklift now injects the path of the bundle's file exports directory into Compose apps for variable interpolation as the environment variable `${FORKLIFT_EXPORTS}`.
+- (cli) `inspector show-repo-version` prints the version/pseudoversion string for the HEAD of the specified local git repo.
+- (cli) `inspector resolve-git-repo` now can also be invoked as `inspector resolve-repo`.
 
 ### Changed
 
