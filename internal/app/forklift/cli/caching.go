@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"os"
 
 	"github.com/pkg/errors"
@@ -12,7 +13,7 @@ import (
 )
 
 func CacheAllReqs(
-	indent int, pallet *fplt.FSPallet, mirrorsCache ffs.Pather,
+	ctx context.Context, indent int, pallet *fplt.FSPallet, mirrorsCache ffs.Pather,
 	palletCache caching.PathedPalletCache,
 	dlCache *caching.FSDownloadCache,
 	platform string, includeDisabled, parallel bool,
@@ -28,7 +29,7 @@ func CacheAllReqs(
 		indent, os.Stderr, "Downloading Docker container images to be deployed by the local pallet...",
 	)
 	if err := DownloadImages(
-		1, pallet, palletCacheWithMerged, platform, includeDisabled, parallel,
+		ctx, 1, pallet, palletCacheWithMerged, platform, includeDisabled, parallel,
 	); err != nil {
 		return err
 	}

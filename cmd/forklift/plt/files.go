@@ -1,10 +1,11 @@
 package plt
 
 import (
+	"context"
 	"fmt"
 	"os"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	"github.com/forklift-run/forklift/internal/app/forklift"
 	fcli "github.com/forklift-run/forklift/internal/app/forklift/cli"
@@ -12,7 +13,7 @@ import (
 
 // ls-file
 
-func lsFileAction(c *cli.Context) error {
+func lsFileAction(ctx context.Context, c *cli.Command) error {
 	plt, _, err := processFullBaseArgs(c.String("workspace"), processingOptions{
 		mergePallet: true,
 	})
@@ -37,7 +38,7 @@ func lsFileAction(c *cli.Context) error {
 
 // locate-file
 
-func locateFileAction(c *cli.Context) error {
+func locateFileAction(ctx context.Context, c *cli.Command) error {
 	plt, _, err := processFullBaseArgs(c.String("workspace"), processingOptions{
 		mergePallet: true,
 	})
@@ -55,7 +56,7 @@ func locateFileAction(c *cli.Context) error {
 
 // show-file
 
-func showFileAction(c *cli.Context) error {
+func showFileAction(ctx context.Context, c *cli.Command) error {
 	plt, _, err := processFullBaseArgs(c.String("workspace"), processingOptions{
 		mergePallet: true,
 	})
@@ -68,7 +69,7 @@ func showFileAction(c *cli.Context) error {
 
 // edit-file
 
-func editFileAction(c *cli.Context) error {
+func editFileAction(ctx context.Context, c *cli.Command) error {
 	plt, _, err := processFullBaseArgs(c.String("workspace"), processingOptions{
 		mergePallet: true,
 	})
@@ -76,12 +77,12 @@ func editFileAction(c *cli.Context) error {
 		return err
 	}
 
-	return fcli.EditFileWithCOW(c.Context, plt, c.Args().First(), c.String("editor"))
+	return fcli.EditFileWithCOW(ctx, plt, c.Args().First(), c.String("editor"))
 }
 
 // del-file
 
-func delFileAction(c *cli.Context) error {
+func delFileAction(ctx context.Context, c *cli.Command) error {
 	plt, _, err := processFullBaseArgs(c.String("workspace"), processingOptions{
 		mergePallet: true,
 	})

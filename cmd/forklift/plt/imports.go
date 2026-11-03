@@ -1,16 +1,17 @@
 package plt
 
 import (
+	"context"
 	"os"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	fcli "github.com/forklift-run/forklift/internal/app/forklift/cli"
 )
 
 // ls-imp
 
-func lsImpAction(c *cli.Context) error {
+func lsImpAction(ctx context.Context, c *cli.Command) error {
 	plt, err := getShallowPallet(c.String("workspace"))
 	if err != nil {
 		return err
@@ -21,7 +22,7 @@ func lsImpAction(c *cli.Context) error {
 
 // show-imp
 
-func showImpAction(c *cli.Context) error {
+func showImpAction(ctx context.Context, c *cli.Command) error {
 	plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{
 		requirePalletCache: true,
 	})

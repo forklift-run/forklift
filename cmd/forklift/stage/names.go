@@ -1,12 +1,13 @@
 package stage
 
 import (
+	"context"
 	"fmt"
 	"slices"
 	"strconv"
 
 	"github.com/pkg/errors"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	"github.com/forklift-run/forklift/exp/staging"
 )
@@ -21,7 +22,7 @@ const (
 // ls-bun-names
 
 func lsBunNamesAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		store, err := getStageStore(c.String("workspace"), c.String("stage-store"), versions)
 		if err != nil {
 			return err
@@ -79,7 +80,7 @@ func printNamedBundleSummary(store *staging.FSStageStore, name string, index int
 // add-bun-name
 
 func addBunNameAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		store, err := getStageStore(c.String("workspace"), c.String("stage-store"), versions)
 		if err != nil {
 			return err
@@ -113,7 +114,7 @@ func addBunNameAction(versions Versions) cli.ActionFunc {
 // del-bun-name
 
 func delBunNameAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		store, err := getStageStore(c.String("workspace"), c.String("stage-store"), versions)
 		if err != nil {
 			return err

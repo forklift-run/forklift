@@ -7,7 +7,7 @@ import (
 
 	units "github.com/docker/go-units"
 	"github.com/pkg/errors"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	fcli "github.com/forklift-run/forklift/internal/app/forklift/cli"
 	"github.com/forklift-run/forklift/internal/clients/docker"
@@ -15,13 +15,13 @@ import (
 
 // ls-img
 
-func lsImgAction(c *cli.Context) error {
+func lsImgAction(ctx context.Context, c *cli.Command) error {
 	client, err := docker.NewClient()
 	if err != nil {
 		return errors.Wrap(err, "couldn't make Docker API client")
 	}
 
-	imgs, err := client.ListImages(context.Background(), c.Args().First())
+	imgs, err := client.ListImages(ctx, c.Args().First())
 	if err != nil {
 		return errors.Wrapf(err, "couldn't list local Docker images")
 	}
@@ -40,14 +40,14 @@ func lsImgAction(c *cli.Context) error {
 
 // show-img
 
-func showImgAction(c *cli.Context) error {
+func showImgAction(ctx context.Context, c *cli.Command) error {
 	client, err := docker.NewClient()
 	if err != nil {
 		return errors.Wrap(err, "couldn't make Docker API client")
 	}
 
 	imageHash := c.Args().First()
-	image, err := client.InspectImage(context.Background(), imageHash)
+	image, err := client.InspectImage(ctx, imageHash)
 	if err != nil {
 		return errors.Wrapf(err, "couldn't inspect image %s", imageHash)
 	}

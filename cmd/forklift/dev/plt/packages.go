@@ -1,17 +1,18 @@
 package plt
 
 import (
+	"context"
 	"os"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	fcli "github.com/forklift-run/forklift/internal/app/forklift/cli"
 )
 
 // ls-pkg
 
-func lsPkgAction(c *cli.Context) error {
-	plt, caches, err := processFullBaseArgs(c, processingOptions{
+func lsPkgAction(ctx context.Context, c *cli.Command) error {
+	plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 		enableOverrides: true,
 		mergePallet:     true,
 	})
@@ -24,8 +25,8 @@ func lsPkgAction(c *cli.Context) error {
 
 // locate-pkg
 
-func locatePkgAction(c *cli.Context) error {
-	plt, caches, err := processFullBaseArgs(c, processingOptions{
+func locatePkgAction(ctx context.Context, c *cli.Command) error {
+	plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 		enableOverrides: true,
 		mergePallet:     true,
 	})
@@ -38,8 +39,8 @@ func locatePkgAction(c *cli.Context) error {
 
 // show-pkg
 
-func showPkgAction(c *cli.Context) error {
-	plt, caches, err := processFullBaseArgs(c, processingOptions{
+func showPkgAction(ctx context.Context, c *cli.Command) error {
+	plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 		enableOverrides: true,
 		mergePallet:     true,
 	})

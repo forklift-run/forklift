@@ -1,12 +1,13 @@
 package stage
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
 
 	"github.com/pkg/errors"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	fbun "github.com/forklift-run/forklift/exp/bundling"
 	"github.com/forklift-run/forklift/exp/staging"
@@ -91,7 +92,7 @@ func getStageStore(
 // show
 
 func showAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		store, err := getStageStore(c.String("workspace"), c.String("stage-store"), versions)
 		if err != nil {
 			return err
@@ -221,7 +222,7 @@ func printRollbackSummary(indent int, store *staging.FSStageStore, index int, na
 // show-hist
 
 func showHistAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		store, err := getStageStore(c.String("workspace"), c.String("stage-store"), versions)
 		if err != nil {
 			return err
@@ -244,7 +245,7 @@ func showHistAction(versions Versions) cli.ActionFunc {
 // show-next-index
 
 func showNextIndexAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		store, err := getStageStore(c.String("workspace"), c.String("stage-store"), versions)
 		if err != nil {
 			return err
@@ -265,7 +266,7 @@ func showNextIndexAction(versions Versions) cli.ActionFunc {
 // set-next
 
 func setNextAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		store, err := getStageStore(c.String("workspace"), c.String("stage-store"), versions)
 		if err != nil {
 			return err
@@ -304,7 +305,7 @@ func setNextAction(versions Versions) cli.ActionFunc {
 		}
 
 		if err = fcli.SetNextStagedBundle(
-			0, store, newNext, c.String("exports"), versions.Tool, versions.MinSupportedBundle,
+			ctx, 0, store, newNext, c.String("exports"), versions.Tool, versions.MinSupportedBundle,
 			!c.Bool("cache-img"), c.String("platform"), c.Bool("parallel"),
 			c.Bool("ignore-tool-version"),
 		); err != nil {
@@ -322,7 +323,7 @@ func setNextAction(versions Versions) cli.ActionFunc {
 // unset-next
 
 func unsetNextAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		store, err := getStageStore(c.String("workspace"), c.String("stage-store"), versions)
 		if err != nil {
 			return err
@@ -407,7 +408,7 @@ func resolveBundleIdentifier(
 // check
 
 func checkAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		bundle, _, err := loadNextBundle(c.String("workspace"), c.String("stage-store"), versions)
 		if err != nil {
 			return err
@@ -427,7 +428,7 @@ func checkAction(versions Versions) cli.ActionFunc {
 // plan
 
 func planAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		bundle, _, err := loadNextBundle(c.String("workspace"), c.String("stage-store"), versions)
 		if err != nil {
 			return err
@@ -447,7 +448,7 @@ func planAction(versions Versions) cli.ActionFunc {
 // apply
 
 func applyAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		bundle, store, err := loadNextBundle(c.String("workspace"), c.String("stage-store"), versions)
 		if err != nil {
 			return err
@@ -470,7 +471,7 @@ func applyAction(versions Versions) cli.ActionFunc {
 // set-next-result
 
 func setNextResultAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		store, err := getStageStore(c.String("workspace"), c.String("stage-store"), versions)
 		if err != nil {
 			return err

@@ -22,7 +22,8 @@ import (
 )
 
 func SetNextStagedBundle(
-	indent int, store *staging.FSStageStore, index int, exportPath,
+	ctx context.Context, indent int,
+	store *staging.FSStageStore, index int, exportPath,
 	toolVersion, bundleMinVersion string, skipImageCaching bool, platform string, parallel,
 	ignoreToolVersion bool,
 ) error {
@@ -40,7 +41,7 @@ func SetNextStagedBundle(
 	}
 
 	if err := DownloadImagesForStoreApply(
-		indent, store, platform, toolVersion, bundleMinVersion, parallel, ignoreToolVersion,
+		ctx, indent, store, platform, toolVersion, bundleMinVersion, parallel, ignoreToolVersion,
 	); err != nil {
 		return errors.Wrap(err, "couldn't cache Docker container images required by staged pallet")
 	}
@@ -62,7 +63,8 @@ type StagingCaches struct {
 }
 
 func StagePallet(
-	indent int, merged *fplt.FSPallet, stageStore *staging.FSStageStore, caches StagingCaches,
+	ctx context.Context, indent int,
+	merged *fplt.FSPallet, stageStore *staging.FSStageStore, caches StagingCaches,
 	exportPath string, versions StagingVersions,
 	skipImageCaching bool, platform string, parallel, ignoreToolVersion bool,
 ) (index int, err error) {
@@ -103,7 +105,7 @@ func StagePallet(
 		return index, errors.Wrapf(err, "couldn't bundle pallet %s as stage %d", merged.Path(), index)
 	}
 	if err = SetNextStagedBundle(
-		indent, stageStore, index, exportPath, versions.Core.Tool, versions.MinSupportedBundle,
+		ctx, indent, stageStore, index, exportPath, versions.Core.Tool, versions.MinSupportedBundle,
 		skipImageCaching, platform, parallel, ignoreToolVersion,
 	); err != nil {
 		return index, errors.Wrapf(

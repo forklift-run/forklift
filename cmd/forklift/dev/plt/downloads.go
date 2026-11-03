@@ -1,10 +1,11 @@
 package plt
 
 import (
+	"context"
 	"fmt"
 	"os"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	"github.com/forklift-run/forklift/internal/app/forklift"
 	fcli "github.com/forklift-run/forklift/internal/app/forklift/cli"
@@ -12,8 +13,8 @@ import (
 
 // ls-dl
 
-func lsDlAction(c *cli.Context) error {
-	plt, caches, err := processFullBaseArgs(c, processingOptions{
+func lsDlAction(ctx context.Context, c *cli.Command) error {
+	plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 		enableOverrides: true,
 		mergePallet:     true,
 	})
@@ -37,8 +38,8 @@ func lsDlAction(c *cli.Context) error {
 // cache-dl
 
 func cacheDlAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
-		plt, caches, err := processFullBaseArgs(c, processingOptions{
+	return func(ctx context.Context, c *cli.Command) error {
+		plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 			requirePalletCache: true,
 			enableOverrides:    true,
 			mergePallet:        true,

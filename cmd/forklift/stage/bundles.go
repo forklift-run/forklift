@@ -1,6 +1,7 @@
 package stage
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -8,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	"github.com/forklift-run/forklift/exp/staging"
 	"github.com/forklift-run/forklift/exp/structures"
@@ -18,7 +19,7 @@ import (
 // ls-bun
 
 func lsBunAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		store, err := getStageStore(c.String("workspace"), c.String("stage-store"), versions)
 		if err != nil {
 			return err
@@ -85,7 +86,7 @@ func printBundleSummary(store *staging.FSStageStore, index int, names map[int][]
 // show-bun
 
 func showBunAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		store, err := getStageStore(c.String("workspace"), c.String("stage-store"), versions)
 		if err != nil {
 			return err
@@ -110,7 +111,7 @@ func showBunAction(versions Versions) cli.ActionFunc {
 // locate-bun
 
 func locateBunAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		store, err := getStageStore(c.String("workspace"), c.String("stage-store"), versions)
 		if err != nil {
 			return err
@@ -133,7 +134,7 @@ func locateBunAction(versions Versions) cli.ActionFunc {
 const knownSnippet = "last staged pallet bundle known to have been successfully applied"
 
 func delBunAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		store, err := getStageStore(c.String("workspace"), c.String("stage-store"), versions)
 		if err != nil {
 			return err
@@ -194,7 +195,7 @@ func delBunAction(versions Versions) cli.ActionFunc {
 // prune-bun
 
 func pruneBunAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		store, err := getStageStore(c.String("workspace"), c.String("stage-store"), versions)
 		if err != nil {
 			return err

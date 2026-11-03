@@ -130,6 +130,7 @@ func CompareDeletedImages(i, j dti.DeleteResponse) int {
 
 func (c *Client) PullImage(
 	ctx context.Context, taggedName, platform string, outStream *streams.Out,
+	opts ...jsonmessage.DisplayOpt,
 ) error {
 	// This function is adapted from the github.com/docker/cli/cli/command/image
 	// package's runPull function, which is licensed under Apache-2.0. This function was changed to
@@ -157,7 +158,8 @@ func (c *Client) PullImage(
 		return err
 	}
 
-	return jsonmessage.DisplayMessages(responseBody.JSONMessages(ctx), outStream)
+	messages := responseBody.JSONMessages(ctx)
+	return jsonmessage.DisplayMessages(messages, outStream, opts...)
 }
 
 func NewOutStream(out io.Writer) *streams.Out {

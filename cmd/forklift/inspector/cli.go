@@ -2,13 +2,13 @@
 package inspector
 
 import (
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 var Cmd = &cli.Command{
 	Name:  "inspector",
 	Usage: "Inspects the state of various things",
-	Subcommands: []*cli.Command{
+	Commands: []*cli.Command{
 		{
 			Name:    "resolve-git-repo",
 			Aliases: []string{"resolve-git-repository"},
