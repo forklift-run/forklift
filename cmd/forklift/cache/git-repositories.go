@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -8,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	ffs "github.com/forklift-run/forklift/exp/fs"
 	fws "github.com/forklift-run/forklift/exp/workspaces"
@@ -67,8 +68,8 @@ func showGitRepo[GitRepo any](
 
 func addGitRepoAction[Cache ffs.Pather](
 	cacheGetter func(wpath string, ensureWorkspace bool) (Cache, error),
-) func(c *cli.Context) error {
-	return func(c *cli.Context) error {
+) func(ctx context.Context, c *cli.Command) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		cache, err := cacheGetter(c.String("workspace"), true)
 		if err != nil {
 			return err
@@ -98,8 +99,8 @@ type remover interface {
 
 func delGitRepoAction[Cache remover](
 	gitRepoType string, cacheGetter func(wpath string, ensureWorkspace bool) (Cache, error),
-) func(c *cli.Context) error {
-	return func(c *cli.Context) error {
+) func(ctx context.Context, c *cli.Command) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		cache, err := cacheGetter(c.String("workspace"), false)
 		if err != nil {
 			return err

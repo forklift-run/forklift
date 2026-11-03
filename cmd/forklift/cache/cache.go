@@ -1,13 +1,14 @@
 package cache
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"sort"
 
 	units "github.com/docker/go-units"
 	"github.com/pkg/errors"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	"github.com/forklift-run/forklift/exp/caching"
 	ffs "github.com/forklift-run/forklift/exp/fs"
@@ -62,15 +63,15 @@ func getPalletCache(wpath string, ensureWorkspace bool) (*caching.FSPalletCache,
 
 // del-all
 
-func delAllAction(c *cli.Context) error {
-	if err := delGitRepoAction("mirror", getMirrorCache)(c); err != nil {
+func delAllAction(ctx context.Context, c *cli.Command) error {
+	if err := delGitRepoAction("mirror", getMirrorCache)(ctx, c); err != nil {
 		return errors.Wrap(err, "couldn't remove cached mirrors")
 	}
-	if err := delGitRepoAction("pallet", getPalletCache)(c); err != nil {
+	if err := delGitRepoAction("pallet", getPalletCache)(ctx, c); err != nil {
 		return errors.Wrap(err, "couldn't remove cached pallets")
 	}
 
-	if err := delImgAction(c); err != nil {
+	if err := delImgAction(ctx, c); err != nil {
 		return errors.Wrap(err, "couldn't remove unused Docker container images")
 	}
 	return nil
@@ -78,13 +79,13 @@ func delAllAction(c *cli.Context) error {
 
 // del-img
 
-func delImgAction(c *cli.Context) error {
+func delImgAction(ctx context.Context, c *cli.Command) error {
 	fmt.Fprintln(os.Stderr, "Removing unused Docker container images...")
 	client, err := docker.NewClient()
 	if err != nil {
 		return errors.Wrap(err, "couldn't make Docker API client")
 	}
-	report, err := client.PruneUnusedImages(c.Context)
+	report, err := client.PruneUnusedImages(ctx)
 	if err != nil {
 		return errors.Wrap(err, "couldn't prune unused Docker container images")
 	}

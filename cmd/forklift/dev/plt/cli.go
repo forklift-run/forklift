@@ -4,7 +4,7 @@ package plt
 import (
 	"slices"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	"github.com/forklift-run/forklift/internal/app/forklift"
 	fcli "github.com/forklift-run/forklift/internal/app/forklift/cli"
@@ -47,7 +47,7 @@ func MakeCmd(versions Versions) *cli.Command {
 					"pallets in the specified directory paths",
 			},
 		},
-		Subcommands: slices.Concat(
+		Commands: slices.Concat(
 			makeUseSubcmds(versions),
 			makeQuerySubcmds(),
 			makeModifySubcmds(versions),
@@ -432,7 +432,7 @@ func makeModifyFileSubcmds() []*cli.Command {
 				&cli.StringFlag{
 					Name:    "editor",
 					Usage:   "Path of text editor",
-					EnvVars: []string{"EDITOR"},
+					Sources: cli.EnvVars("EDITOR"),
 				},
 			},
 		},

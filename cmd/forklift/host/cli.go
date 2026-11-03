@@ -2,13 +2,13 @@
 package host
 
 import (
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 var Cmd = &cli.Command{
 	Name:  "host",
 	Usage: "Manages the local Docker host",
-	Subcommands: []*cli.Command{
+	Commands: []*cli.Command{
 		{
 			Name:     "ls-app",
 			Aliases:  []string{"list-applications"},

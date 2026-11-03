@@ -1,11 +1,12 @@
 package inspector
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	"github.com/pkg/errors"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	ffs "github.com/forklift-run/forklift/exp/fs"
 	fws "github.com/forklift-run/forklift/exp/workspaces"
@@ -14,7 +15,7 @@ import (
 
 // resolve-git-repo
 
-func resolveGitRepoAction(c *cli.Context) error {
+func resolveGitRepoAction(ctx context.Context, c *cli.Command) error {
 	workspace, err := ensureWorkspace(c.String("workspace"))
 	if err != nil {
 		return err

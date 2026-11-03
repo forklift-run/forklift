@@ -4,7 +4,7 @@ package dev
 import (
 	"os"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	"github.com/forklift-run/forklift/cmd/forklift/dev/plt"
 )
@@ -18,7 +18,7 @@ func MakeCmd(versions Versions) *cli.Command {
 		Name:    "dev",
 		Aliases: []string{"development"},
 		Usage:   "Facilitates development and maintenance in the current working directory",
-		Subcommands: []*cli.Command{
+		Commands: []*cli.Command{
 			plt.MakeCmd(versions),
 		},
 		Flags: []cli.Flag{
@@ -26,7 +26,7 @@ func MakeCmd(versions Versions) *cli.Command {
 				Name:    "cwd",
 				Value:   defaultWorkingDir,
 				Usage:   "Path of the current working directory",
-				EnvVars: []string{"FORKLIFT_CWD"},
+				Sources: cli.EnvVars("FORKLIFT_CWD"),
 			},
 		},
 	}

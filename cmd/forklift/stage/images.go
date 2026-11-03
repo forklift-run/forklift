@@ -1,10 +1,11 @@
 package stage
 
 import (
+	"context"
 	"fmt"
 	"os"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	fcli "github.com/forklift-run/forklift/internal/app/forklift/cli"
 )
@@ -12,7 +13,7 @@ import (
 // cache-img
 
 func cacheImgAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		store, err := getStageStore(c.String("workspace"), c.String("stage-store"), versions)
 		if err != nil {
 			return err
@@ -22,7 +23,7 @@ func cacheImgAction(versions Versions) cli.ActionFunc {
 		}
 
 		if err = fcli.DownloadImagesForStoreApply(
-			c.Context, 0, store, versions.Tool, versions.MinSupportedBundle,
+			ctx, 0, store, versions.Tool, versions.MinSupportedBundle,
 			c.String("platform"), c.Bool("parallel"), c.Bool("ignore-tool-version"),
 		); err != nil {
 			return err

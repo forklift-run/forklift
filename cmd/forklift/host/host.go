@@ -8,14 +8,14 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	"github.com/forklift-run/forklift/internal/clients/docker"
 )
 
 // ls-app
 
-func lsAppAction(c *cli.Context) error {
+func lsAppAction(ctx context.Context, c *cli.Command) error {
 	client, err := docker.NewClient()
 	if err != nil {
 		return errors.Wrap(err, "couldn't make Docker API client")
@@ -36,7 +36,7 @@ func lsAppAction(c *cli.Context) error {
 
 // ls-con
 
-func lsConAction(c *cli.Context) error {
+func lsConAction(ctx context.Context, c *cli.Command) error {
 	client, err := docker.NewClient()
 	if err != nil {
 		return errors.Wrap(err, "couldn't make Docker API client")
@@ -59,7 +59,7 @@ func lsConAction(c *cli.Context) error {
 
 // del
 
-func delAction(c *cli.Context) error {
+func delAction(ctx context.Context, c *cli.Command) error {
 	client, err := docker.NewClient()
 	if err != nil {
 		return errors.Wrap(err, "couldn't make Docker API client")

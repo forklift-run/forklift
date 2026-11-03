@@ -1,10 +1,11 @@
 package plt
 
 import (
+	"context"
 	"fmt"
 	"os"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	"github.com/forklift-run/forklift/internal/app/forklift"
 	fcli "github.com/forklift-run/forklift/internal/app/forklift/cli"
@@ -12,8 +13,8 @@ import (
 
 // ls-img
 
-func lsImgAction(c *cli.Context) error {
-	plt, caches, err := processFullBaseArgs(c, processingOptions{
+func lsImgAction(ctx context.Context, c *cli.Command) error {
+	plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 		enableOverrides: true,
 		mergePallet:     true,
 	})
@@ -34,8 +35,8 @@ func lsImgAction(c *cli.Context) error {
 // cache-img
 
 func cacheImgAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
-		plt, caches, err := processFullBaseArgs(c, processingOptions{
+	return func(ctx context.Context, c *cli.Command) error {
+		plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 			requirePalletCache: true,
 			enableOverrides:    true,
 			mergePallet:        true,
@@ -53,7 +54,7 @@ func cacheImgAction(versions Versions) cli.ActionFunc {
 			os.Stderr, "Downloading Docker container images specified by the development pallet...",
 		)
 		if err := fcli.DownloadImages(
-			c.Context, 0, plt, caches.pmp,
+			ctx, 0, plt, caches.pmp,
 			c.String("platform"), c.Bool("include-disabled"), c.Bool("parallel"),
 		); err != nil {
 			return err

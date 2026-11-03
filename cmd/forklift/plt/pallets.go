@@ -1,13 +1,14 @@
 package plt
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/pkg/errors"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	"github.com/forklift-run/forklift/exp/caching"
 	ffs "github.com/forklift-run/forklift/exp/fs"
@@ -94,7 +95,7 @@ func getShallowPallet(wpath string) (plt *fplt.FSPallet, err error) {
 // cache-all
 
 func cacheAllAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{})
 		if err != nil {
 			return err
@@ -106,7 +107,7 @@ func cacheAllAction(versions Versions) cli.ActionFunc {
 		}
 
 		if err = fcli.CacheAllReqs(
-			c.Context, 0, plt, caches.m, caches.pm, caches.d,
+			ctx, 0, plt, caches.m, caches.pm, caches.d,
 			c.String("platform"), c.Bool("include-disabled"), c.Bool("parallel"),
 		); err != nil {
 			return err
@@ -119,7 +120,7 @@ func cacheAllAction(versions Versions) cli.ActionFunc {
 // switch
 
 func switchAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		workspace, err := ensureWorkspace(c.String("workspace"))
 		if err != nil {
 			return err
@@ -152,9 +153,9 @@ func switchAction(versions Versions) cli.ActionFunc {
 		fmt.Fprintln(os.Stderr)
 
 		if c.Bool("apply") {
-			return applyAction(versions)(c)
+			return applyAction(versions)(ctx, c)
 		}
-		return stageAction(versions)(c)
+		return stageAction(versions)(ctx, c)
 	}
 }
 
@@ -443,7 +444,7 @@ func preparePallet(
 // upgrade
 
 func upgradeAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		workspace, err := ensureWorkspace(c.String("workspace"))
 		if err != nil {
 			return err
@@ -477,9 +478,9 @@ func upgradeAction(versions Versions) cli.ActionFunc {
 		fmt.Fprintln(os.Stderr)
 
 		if c.Bool("apply") {
-			return applyAction(versions)(c)
+			return applyAction(versions)(ctx, c)
 		}
-		return stageAction(versions)(c)
+		return stageAction(versions)(ctx, c)
 	}
 }
 
@@ -628,7 +629,7 @@ func printUpgrade(indent int, current, upgrade fplt.GitRepoReq, allowDowngrade b
 
 // check-upgrade
 
-func checkUpgradeAction(c *cli.Context) error {
+func checkUpgradeAction(ctx context.Context, c *cli.Command) error {
 	workspace, err := ensureWorkspace(c.String("workspace"))
 	if err != nil {
 		return err
@@ -656,7 +657,7 @@ func checkUpgradeAction(c *cli.Context) error {
 
 // show-upgrade-query
 
-func showUpgradeQueryAction(c *cli.Context) error {
+func showUpgradeQueryAction(ctx context.Context, c *cli.Command) error {
 	workspace, err := ensureWorkspace(c.String("workspace"))
 	if err != nil {
 		return err
@@ -672,7 +673,7 @@ func showUpgradeQueryAction(c *cli.Context) error {
 
 // set-upgrade-query
 
-func setUpgradeQueryAction(c *cli.Context) error {
+func setUpgradeQueryAction(ctx context.Context, c *cli.Command) error {
 	workspace, err := ensureWorkspace(c.String("workspace"))
 	if err != nil {
 		return err
@@ -689,7 +690,7 @@ func setUpgradeQueryAction(c *cli.Context) error {
 // clone
 
 func cloneAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		workspace, err := ensureWorkspace(c.String("workspace"))
 		if err != nil {
 			return err
@@ -723,9 +724,9 @@ func cloneAction(versions Versions) cli.ActionFunc {
 
 		switch {
 		case c.Bool("apply"):
-			return applyAction(versions)(c)
+			return applyAction(versions)(ctx, c)
 		case c.Bool("stage"):
-			return stageAction(versions)(c)
+			return stageAction(versions)(ctx, c)
 		default:
 			fmt.Fprintln(os.Stderr, "Done!")
 			return nil
@@ -735,7 +736,7 @@ func cloneAction(versions Versions) cli.ActionFunc {
 
 // fetch
 
-func fetchAction(c *cli.Context) error {
+func fetchAction(ctx context.Context, c *cli.Command) error {
 	workspace, err := fws.LoadWorkspace(c.String("workspace"))
 	if err != nil {
 		return err
@@ -758,7 +759,7 @@ func fetchAction(c *cli.Context) error {
 // pull
 
 func pullAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		workspace, err := fws.LoadWorkspace(c.String("workspace"))
 		if err != nil {
 			return err
@@ -800,9 +801,9 @@ func pullAction(versions Versions) cli.ActionFunc {
 
 		switch {
 		case c.Bool("apply"):
-			return applyAction(versions)(c)
+			return applyAction(versions)(ctx, c)
 		case c.Bool("stage"):
-			return stageAction(versions)(c)
+			return stageAction(versions)(ctx, c)
 		default:
 			fmt.Fprintln(os.Stderr, "Done!")
 			return nil
@@ -812,7 +813,7 @@ func pullAction(versions Versions) cli.ActionFunc {
 
 // del
 
-func delAction(c *cli.Context) error {
+func delAction(ctx context.Context, c *cli.Command) error {
 	workspace, err := fws.LoadWorkspace(c.String("workspace"))
 	if err != nil {
 		return err
@@ -827,7 +828,7 @@ func delAction(c *cli.Context) error {
 
 // show
 
-func showAction(c *cli.Context) error {
+func showAction(ctx context.Context, c *cli.Command) error {
 	plt, err := getShallowPallet(c.String("workspace"))
 	if err != nil {
 		return err
@@ -838,7 +839,7 @@ func showAction(c *cli.Context) error {
 // check
 
 func checkAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{
 			requirePalletCache: true,
 			mergePallet:        true,
@@ -862,7 +863,7 @@ func checkAction(versions Versions) cli.ActionFunc {
 // plan
 
 func planAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{
 			requirePalletCache: true,
 			mergePallet:        true,
@@ -888,7 +889,7 @@ func planAction(versions Versions) cli.ActionFunc {
 // stage
 
 func stageAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{})
 		if err != nil {
 			return err
@@ -912,7 +913,7 @@ func stageAction(versions Versions) cli.ActionFunc {
 			return err
 		}
 		if _, err = fcli.StagePallet(
-			c.Context, 0, plt, stageStore, caches.staging(), c.String("exports"),
+			ctx, 0, plt, stageStore, caches.staging(), c.String("exports"),
 			versions.Staging, !c.Bool("cache-img"), c.String("platform"), c.Bool("parallel"),
 			c.Bool("ignore-tool-version"),
 		); err != nil {
@@ -930,7 +931,7 @@ func stageAction(versions Versions) cli.ActionFunc {
 // apply
 
 func applyAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{})
 		if err != nil {
 			return err
@@ -954,7 +955,7 @@ func applyAction(versions Versions) cli.ActionFunc {
 			return err
 		}
 		index, err := fcli.StagePallet(
-			c.Context, 0, plt, stageStore, caches.staging(), c.String("exports"),
+			ctx, 0, plt, stageStore, caches.staging(), c.String("exports"),
 			versions.Staging, false, c.String("platform"), c.Bool("parallel"),
 			c.Bool("ignore-tool-version"),
 		)
@@ -977,7 +978,7 @@ func applyAction(versions Versions) cli.ActionFunc {
 // cache-plt
 
 func cachePltAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		plt, err := getShallowPallet(c.String("workspace"))
 		if err != nil {
 			return err
@@ -1019,7 +1020,7 @@ func cachePltAction(versions Versions) cli.ActionFunc {
 
 // ls-plt
 
-func lsPltAction(c *cli.Context) error {
+func lsPltAction(ctx context.Context, c *cli.Command) error {
 	plt, err := getShallowPallet(c.String("workspace"))
 	if err != nil {
 		return err
@@ -1030,7 +1031,7 @@ func lsPltAction(c *cli.Context) error {
 
 // show-plt
 
-func showPltAction(c *cli.Context) error {
+func showPltAction(ctx context.Context, c *cli.Command) error {
 	plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{
 		requirePalletCache: true,
 	})
@@ -1043,7 +1044,7 @@ func showPltAction(c *cli.Context) error {
 
 // show-plt-version
 
-func showPltVersionAction(c *cli.Context) error {
+func showPltVersionAction(ctx context.Context, c *cli.Command) error {
 	plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{})
 	if err != nil {
 		return err
@@ -1055,7 +1056,7 @@ func showPltVersionAction(c *cli.Context) error {
 // add-plt
 
 func addPltAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		plt, err := getShallowPallet(c.String("workspace"))
 		if err != nil {
 			return err
@@ -1096,7 +1097,7 @@ func addPltAction(versions Versions) cli.ActionFunc {
 // del-plt
 
 func delPltAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		plt, err := getShallowPallet(c.String("workspace"))
 		if err != nil {
 			return err
@@ -1118,7 +1119,7 @@ func delPltAction(versions Versions) cli.ActionFunc {
 
 // ls-plt-file
 
-func lsPltFileAction(c *cli.Context) error {
+func lsPltFileAction(ctx context.Context, c *cli.Command) error {
 	plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{})
 	if err != nil {
 		return err
@@ -1145,7 +1146,7 @@ func lsPltFileAction(c *cli.Context) error {
 
 // locate-plt-file
 
-func locatePltFileAction(c *cli.Context) error {
+func locatePltFileAction(ctx context.Context, c *cli.Command) error {
 	plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{})
 	if err != nil {
 		return err
@@ -1165,7 +1166,7 @@ func locatePltFileAction(c *cli.Context) error {
 
 // show-plt-file
 
-func showPltFileAction(c *cli.Context) error {
+func showPltFileAction(ctx context.Context, c *cli.Command) error {
 	plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{})
 	if err != nil {
 		return err
@@ -1180,7 +1181,7 @@ func showPltFileAction(c *cli.Context) error {
 
 // ls-plt-feat
 
-func lsPltFeatAction(c *cli.Context) error {
+func lsPltFeatAction(ctx context.Context, c *cli.Command) error {
 	plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{})
 	if err != nil {
 		return err
@@ -1195,7 +1196,7 @@ func lsPltFeatAction(c *cli.Context) error {
 
 // show-plt-feat
 
-func showPltFeatAction(c *cli.Context) error {
+func showPltFeatAction(ctx context.Context, c *cli.Command) error {
 	plt, caches, err := processFullBaseArgs(c.String("workspace"), processingOptions{})
 	if err != nil {
 		return err

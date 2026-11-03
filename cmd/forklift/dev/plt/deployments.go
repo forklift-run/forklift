@@ -1,18 +1,19 @@
 package plt
 
 import (
+	"context"
 	"fmt"
 	"os"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	fcli "github.com/forklift-run/forklift/internal/app/forklift/cli"
 )
 
 // ls-depl
 
-func lsDeplAction(c *cli.Context) error {
-	plt, _, err := processFullBaseArgs(c, processingOptions{
+func lsDeplAction(ctx context.Context, c *cli.Command) error {
+	plt, _, err := processFullBaseArgs(ctx, c, processingOptions{
 		enableOverrides: true,
 		mergePallet:     true,
 	})
@@ -25,8 +26,8 @@ func lsDeplAction(c *cli.Context) error {
 
 // show-depl
 
-func showDeplAction(c *cli.Context) error {
-	plt, caches, err := processFullBaseArgs(c, processingOptions{
+func showDeplAction(ctx context.Context, c *cli.Command) error {
+	plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 		enableOverrides: true,
 		mergePallet:     true,
 	})
@@ -39,8 +40,8 @@ func showDeplAction(c *cli.Context) error {
 
 // locate-depl-pkg
 
-func locateDeplPkgAction(c *cli.Context) error {
-	plt, caches, err := processFullBaseArgs(c, processingOptions{
+func locateDeplPkgAction(ctx context.Context, c *cli.Command) error {
+	plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 		enableOverrides: true,
 		mergePallet:     true,
 	})
@@ -56,8 +57,8 @@ func locateDeplPkgAction(c *cli.Context) error {
 // add-depl
 
 func addDeplAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
-		plt, caches, err := processFullBaseArgs(c, processingOptions{
+	return func(ctx context.Context, c *cli.Command) error {
+		plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 			requirePalletCache: true,
 			enableOverrides:    true,
 			mergePallet:        true,
@@ -82,9 +83,9 @@ func addDeplAction(versions Versions) cli.ActionFunc {
 
 		switch {
 		case c.Bool("apply"):
-			return applyAction(versions)(c)
+			return applyAction(versions)(ctx, c)
 		case c.Bool("stage"):
-			return stageAction(versions)(c)
+			return stageAction(versions)(ctx, c)
 		default:
 			fmt.Fprintln(os.Stderr, "Done!")
 			return nil
@@ -95,8 +96,8 @@ func addDeplAction(versions Versions) cli.ActionFunc {
 // del-depl
 
 func delDeplAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
-		plt, caches, err := processFullBaseArgs(c, processingOptions{
+	return func(ctx context.Context, c *cli.Command) error {
+		plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 			requirePalletCache: true,
 			enableOverrides:    true,
 			mergePallet:        true,
@@ -116,9 +117,9 @@ func delDeplAction(versions Versions) cli.ActionFunc {
 
 		switch {
 		case c.Bool("apply"):
-			return applyAction(versions)(c)
+			return applyAction(versions)(ctx, c)
 		case c.Bool("stage"):
-			return stageAction(versions)(c)
+			return stageAction(versions)(ctx, c)
 		default:
 			fmt.Fprintln(os.Stderr, "Done!")
 			return nil
@@ -129,8 +130,8 @@ func delDeplAction(versions Versions) cli.ActionFunc {
 // set-depl-pkg
 
 func setDeplPkgAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
-		plt, caches, err := processFullBaseArgs(c, processingOptions{
+	return func(ctx context.Context, c *cli.Command) error {
+		plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 			requirePalletCache: true,
 			enableOverrides:    true,
 			mergePallet:        true,
@@ -152,9 +153,9 @@ func setDeplPkgAction(versions Versions) cli.ActionFunc {
 
 		switch {
 		case c.Bool("apply"):
-			return applyAction(versions)(c)
+			return applyAction(versions)(ctx, c)
 		case c.Bool("stage"):
-			return stageAction(versions)(c)
+			return stageAction(versions)(ctx, c)
 		default:
 			fmt.Fprintln(os.Stderr, "Done!")
 			return nil
@@ -165,8 +166,8 @@ func setDeplPkgAction(versions Versions) cli.ActionFunc {
 // add-depl-feat
 
 func addDeplFeatAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
-		plt, caches, err := processFullBaseArgs(c, processingOptions{
+	return func(ctx context.Context, c *cli.Command) error {
+		plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 			requirePalletCache: true,
 			enableOverrides:    true,
 			mergePallet:        true,
@@ -188,9 +189,9 @@ func addDeplFeatAction(versions Versions) cli.ActionFunc {
 
 		switch {
 		case c.Bool("apply"):
-			return applyAction(versions)(c)
+			return applyAction(versions)(ctx, c)
 		case c.Bool("stage"):
-			return stageAction(versions)(c)
+			return stageAction(versions)(ctx, c)
 		default:
 			fmt.Fprintln(os.Stderr, "Done!")
 			return nil
@@ -201,8 +202,8 @@ func addDeplFeatAction(versions Versions) cli.ActionFunc {
 // del-depl-feat
 
 func delDeplFeatAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
-		plt, caches, err := processFullBaseArgs(c, processingOptions{
+	return func(ctx context.Context, c *cli.Command) error {
+		plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 			requirePalletCache: true,
 			enableOverrides:    true,
 			mergePallet:        true,
@@ -224,9 +225,9 @@ func delDeplFeatAction(versions Versions) cli.ActionFunc {
 
 		switch {
 		case c.Bool("apply"):
-			return applyAction(versions)(c)
+			return applyAction(versions)(ctx, c)
 		case c.Bool("stage"):
-			return stageAction(versions)(c)
+			return stageAction(versions)(ctx, c)
 		default:
 			fmt.Fprintln(os.Stderr, "Done!")
 			return nil
@@ -237,8 +238,8 @@ func delDeplFeatAction(versions Versions) cli.ActionFunc {
 // set-depl-disabled
 
 func setDeplDisabledAction(versions Versions, setting bool) cli.ActionFunc {
-	return func(c *cli.Context) error {
-		plt, caches, err := processFullBaseArgs(c, processingOptions{
+	return func(ctx context.Context, c *cli.Command) error {
+		plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 			requirePalletCache: true,
 			enableOverrides:    true,
 			mergePallet:        true,
@@ -259,9 +260,9 @@ func setDeplDisabledAction(versions Versions, setting bool) cli.ActionFunc {
 
 		switch {
 		case c.Bool("apply"):
-			return applyAction(versions)(c)
+			return applyAction(versions)(ctx, c)
 		case c.Bool("stage"):
-			return stageAction(versions)(c)
+			return stageAction(versions)(ctx, c)
 		default:
 			fmt.Fprintln(os.Stderr, "Done!")
 			return nil

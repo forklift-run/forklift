@@ -1,9 +1,10 @@
 package cache
 
 import (
+	"context"
 	"os"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	"github.com/forklift-run/forklift/exp/caching"
 	fplt "github.com/forklift-run/forklift/exp/pallets"
@@ -12,7 +13,7 @@ import (
 
 // ls-plt
 
-func lsPltAction(c *cli.Context) error {
+func lsPltAction(ctx context.Context, c *cli.Command) error {
 	cache, err := getPalletCache(c.String("workspace"), false)
 	if err != nil {
 		return err
@@ -29,7 +30,7 @@ func lsPltAction(c *cli.Context) error {
 
 // show-plt
 
-func showPltAction(c *cli.Context) error {
+func showPltAction(ctx context.Context, c *cli.Command) error {
 	cache, err := getPalletCache(c.String("workspace"), false)
 	if err != nil {
 		return err

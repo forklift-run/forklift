@@ -1,12 +1,13 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 	"runtime/debug"
 
 	"github.com/carlmjohnson/versioninfo"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	"github.com/forklift-run/forklift/cmd/forklift/cache"
 	"github.com/forklift-run/forklift/cmd/forklift/dev"
@@ -20,7 +21,7 @@ import (
 )
 
 func main() {
-	if err := app.Run(os.Args); err != nil {
+	if err := app.Run(context.Background(), os.Args); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -39,7 +40,7 @@ var fcliVersions fcli.StagingVersions = fcli.StagingVersions{
 	NewBundle:          newBundleVersion,
 }
 
-var app = &cli.App{
+var app = &cli.Command{
 	Name:    "forklift",
 	Version: toolVersion,
 	Usage:   "Manages pallets and package deployments",
@@ -67,37 +68,37 @@ var app = &cli.App{
 			Aliases: []string{"ws"},
 			Value:   defaultWorkspaceBase,
 			Usage:   "Path of the forklift workspace",
-			EnvVars: []string{"FORKLIFT_WORKSPACE"},
+			Sources: cli.EnvVars("FORKLIFT_WORKSPACE"),
 		},
 		&cli.StringFlag{
 			Name:    "stage-store",
 			Aliases: []string{"ss"},
 			Value:   "",
 			Usage:   "Path of the forklift stage store, overriding the default path in the workspace",
-			EnvVars: []string{"FORKLIFT_STAGE_STORE"},
+			Sources: cli.EnvVars("FORKLIFT_STAGE_STORE"),
 		},
 		&cli.BoolFlag{
 			Name:    "ignore-tool-version",
 			Value:   false,
 			Usage:   "Ignore the version of the forklift tool in version compatibility checks",
-			EnvVars: []string{"FORKLIFT_IGNORE_TOOL_VERSION"},
+			Sources: cli.EnvVars("FORKLIFT_IGNORE_TOOL_VERSION"),
 		},
 		&cli.BoolFlag{
 			Name:  "parallel",
 			Value: true,
 			Usage: "Allow parallel execution of I/O-bound tasks, such as downloading container images " +
 				"or starting containers",
-			EnvVars: []string{"FORKLIFT_PARALLEL"},
+			Sources: cli.EnvVars("FORKLIFT_PARALLEL"),
 		},
 		&cli.StringFlag{
 			Name:    "platform",
 			Value:   defaultPlatform,
 			Usage:   "Select the os/arch or os/arch/variant platform for downloading container images",
-			EnvVars: []string{"FORKLIFT_PLATFORM"},
+			Sources: cli.EnvVars("FORKLIFT_PLATFORM"),
 		},
 	},
-	EnableBashCompletion: true,
-	Suggest:              true,
+	EnableShellCompletion: true,
+	Suggest:               true,
 }
 
 // Versioning

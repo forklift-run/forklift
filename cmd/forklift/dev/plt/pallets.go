@@ -1,12 +1,13 @@
 package plt
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	"github.com/forklift-run/forklift/exp/caching"
 	ffs "github.com/forklift-run/forklift/exp/fs"
@@ -41,7 +42,7 @@ type processingOptions struct {
 }
 
 func processFullBaseArgs(
-	c *cli.Context, opts processingOptions,
+	_ context.Context, c *cli.Command, opts processingOptions,
 ) (plt *fplt.FSPallet, caches workspaceCaches, err error) {
 	if plt, err = getShallowPallet(c.String("cwd")); err != nil {
 		return nil, workspaceCaches{}, err
@@ -171,8 +172,8 @@ func setPalletOverrideCacheVersions(
 // cache-all
 
 func cacheAllAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
-		plt, caches, err := processFullBaseArgs(c, processingOptions{
+	return func(ctx context.Context, c *cli.Command) error {
+		plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 			enableOverrides: true,
 		})
 		if err != nil {
@@ -185,7 +186,7 @@ func cacheAllAction(versions Versions) cli.ActionFunc {
 		}
 
 		if err = fcli.CacheAllReqs(
-			c.Context, 0, plt, caches.m, caches.pm, caches.d,
+			ctx, 0, plt, caches.m, caches.pm, caches.d,
 			c.String("platform"), c.Bool("include-disabled"), c.Bool("parallel"),
 		); err != nil {
 			return err
@@ -197,7 +198,7 @@ func cacheAllAction(versions Versions) cli.ActionFunc {
 
 // show
 
-func showAction(c *cli.Context) error {
+func showAction(ctx context.Context, c *cli.Command) error {
 	plt, err := getShallowPallet(c.String("cwd"))
 	if err != nil {
 		return err
@@ -208,8 +209,8 @@ func showAction(c *cli.Context) error {
 // check
 
 func checkAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
-		plt, caches, err := processFullBaseArgs(c, processingOptions{
+	return func(ctx context.Context, c *cli.Command) error {
+		plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 			requirePalletCache: true,
 			enableOverrides:    true,
 			mergePallet:        true,
@@ -233,8 +234,8 @@ func checkAction(versions Versions) cli.ActionFunc {
 // plan
 
 func planAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
-		plt, caches, err := processFullBaseArgs(c, processingOptions{
+	return func(ctx context.Context, c *cli.Command) error {
+		plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 			requirePalletCache: true,
 			enableOverrides:    true,
 			mergePallet:        true,
@@ -258,8 +259,8 @@ func planAction(versions Versions) cli.ActionFunc {
 // stage
 
 func stageAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
-		plt, caches, err := processFullBaseArgs(c, processingOptions{
+	return func(ctx context.Context, c *cli.Command) error {
+		plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 			enableOverrides: true,
 		})
 		if err != nil {
@@ -284,7 +285,7 @@ func stageAction(versions Versions) cli.ActionFunc {
 			return err
 		}
 		if _, err = fcli.StagePallet(
-			c.Context, 0, plt, stageStore, caches.staging(), c.String("exports"),
+			ctx, 0, plt, stageStore, caches.staging(), c.String("exports"),
 			versions.Staging, !c.Bool("cache-img"), c.String("platform"), c.Bool("parallel"),
 			c.Bool("ignore-tool-version"),
 		); err != nil {
@@ -301,8 +302,8 @@ func stageAction(versions Versions) cli.ActionFunc {
 // apply
 
 func applyAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
-		plt, caches, err := processFullBaseArgs(c, processingOptions{
+	return func(ctx context.Context, c *cli.Command) error {
+		plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 			enableOverrides: true,
 		})
 		if err != nil {
@@ -327,7 +328,7 @@ func applyAction(versions Versions) cli.ActionFunc {
 			return err
 		}
 		index, err := fcli.StagePallet(
-			c.Context, 0, plt, stageStore, caches.staging(), c.String("exports"),
+			ctx, 0, plt, stageStore, caches.staging(), c.String("exports"),
 			versions.Staging, false, c.String("platform"), c.Bool("parallel"),
 			c.Bool("ignore-tool-version"),
 		)
@@ -350,7 +351,7 @@ func applyAction(versions Versions) cli.ActionFunc {
 // cache-plt
 
 func cachePltAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		plt, err := getShallowPallet(c.String("cwd"))
 		if err != nil {
 			return err
@@ -392,7 +393,7 @@ func cachePltAction(versions Versions) cli.ActionFunc {
 
 // ls-plt
 
-func lsPltAction(c *cli.Context) error {
+func lsPltAction(ctx context.Context, c *cli.Command) error {
 	plt, err := getShallowPallet(c.String("cwd"))
 	if err != nil {
 		return err
@@ -402,8 +403,8 @@ func lsPltAction(c *cli.Context) error {
 
 // show-plt
 
-func showPltAction(c *cli.Context) error {
-	plt, caches, err := processFullBaseArgs(c, processingOptions{
+func showPltAction(ctx context.Context, c *cli.Command) error {
+	plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 		requirePalletCache: true,
 		enableOverrides:    true,
 	})
@@ -416,8 +417,8 @@ func showPltAction(c *cli.Context) error {
 
 // show-plt-version
 
-func showPltVersionAction(c *cli.Context) error {
-	plt, caches, err := processFullBaseArgs(c, processingOptions{
+func showPltVersionAction(ctx context.Context, c *cli.Command) error {
+	plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 		enableOverrides: true,
 	})
 	if err != nil {
@@ -430,7 +431,7 @@ func showPltVersionAction(c *cli.Context) error {
 // add-plt
 
 func addPltAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		plt, err := getShallowPallet(c.String("cwd"))
 		if err != nil {
 			return err
@@ -452,7 +453,7 @@ func addPltAction(versions Versions) cli.ActionFunc {
 			return err
 		}
 		if c.Bool("cache-req") {
-			plt, caches, err := processFullBaseArgs(c, processingOptions{
+			plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 				enableOverrides: true,
 			})
 			if err != nil {
@@ -473,7 +474,7 @@ func addPltAction(versions Versions) cli.ActionFunc {
 // del-plt
 
 func delPltAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		plt, err := getShallowPallet(c.String("cwd"))
 		if err != nil {
 			return err
@@ -495,8 +496,8 @@ func delPltAction(versions Versions) cli.ActionFunc {
 
 // ls-plt-file
 
-func lsPltFileAction(c *cli.Context) error {
-	plt, caches, err := processFullBaseArgs(c, processingOptions{
+func lsPltFileAction(ctx context.Context, c *cli.Command) error {
+	plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 		enableOverrides: true,
 	})
 	if err != nil {
@@ -524,8 +525,8 @@ func lsPltFileAction(c *cli.Context) error {
 
 // locate-plt-file
 
-func locatePltFileAction(c *cli.Context) error {
-	plt, caches, err := processFullBaseArgs(c, processingOptions{
+func locatePltFileAction(ctx context.Context, c *cli.Command) error {
+	plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 		enableOverrides: true,
 	})
 	if err != nil {
@@ -546,8 +547,8 @@ func locatePltFileAction(c *cli.Context) error {
 
 // show-plt-file
 
-func showPltFileAction(c *cli.Context) error {
-	plt, caches, err := processFullBaseArgs(c, processingOptions{
+func showPltFileAction(ctx context.Context, c *cli.Command) error {
+	plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 		enableOverrides: true,
 	})
 	if err != nil {
@@ -563,8 +564,8 @@ func showPltFileAction(c *cli.Context) error {
 
 // ls-plt-feat
 
-func lsPltFeatAction(c *cli.Context) error {
-	plt, caches, err := processFullBaseArgs(c, processingOptions{
+func lsPltFeatAction(ctx context.Context, c *cli.Command) error {
+	plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 		enableOverrides: true,
 	})
 	if err != nil {
@@ -580,8 +581,8 @@ func lsPltFeatAction(c *cli.Context) error {
 
 // show-plt-feat
 
-func showPltFeatAction(c *cli.Context) error {
-	plt, caches, err := processFullBaseArgs(c, processingOptions{
+func showPltFeatAction(ctx context.Context, c *cli.Command) error {
+	plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 		enableOverrides: true,
 	})
 	if err != nil {

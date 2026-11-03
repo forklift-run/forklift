@@ -1,17 +1,18 @@
 package plt
 
 import (
+	"context"
 	"os"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	fcli "github.com/forklift-run/forklift/internal/app/forklift/cli"
 )
 
 // ls-feat
 
-func lsFeatAction(c *cli.Context) error {
-	plt, _, err := processFullBaseArgs(c, processingOptions{
+func lsFeatAction(ctx context.Context, c *cli.Command) error {
+	plt, _, err := processFullBaseArgs(ctx, c, processingOptions{
 		requirePalletCache: true,
 		enableOverrides:    true,
 		mergePallet:        true,
@@ -25,8 +26,8 @@ func lsFeatAction(c *cli.Context) error {
 
 // show-feat
 
-func showFeatAction(c *cli.Context) error {
-	plt, caches, err := processFullBaseArgs(c, processingOptions{
+func showFeatAction(ctx context.Context, c *cli.Command) error {
+	plt, caches, err := processFullBaseArgs(ctx, c, processingOptions{
 		requirePalletCache: true,
 		enableOverrides:    true,
 		mergePallet:        true,

@@ -2,7 +2,7 @@
 package cache
 
 import (
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 const (
@@ -13,7 +13,7 @@ const (
 var Cmd = &cli.Command{
 	Name:  "cache",
 	Usage: "Manages the local cache of pallets and downloads",
-	Subcommands: []*cli.Command{
+	Commands: []*cli.Command{
 		{
 			Name:     "ls-plt",
 			Aliases:  []string{"list-pallets"},

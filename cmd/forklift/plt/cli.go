@@ -4,7 +4,7 @@ package plt
 import (
 	"slices"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	"github.com/forklift-run/forklift/internal/app/forklift"
 	fcli "github.com/forklift-run/forklift/internal/app/forklift/cli"
@@ -46,7 +46,7 @@ func MakeCmd(versions Versions) *cli.Command {
 		Name:    "plt",
 		Aliases: []string{"pallet"},
 		Usage:   "Manages the local pallet",
-		Subcommands: slices.Concat(
+		Commands: slices.Concat(
 			[]*cli.Command{
 				{
 					Name: "switch",
@@ -593,7 +593,7 @@ var modifyBaseFlags []cli.Flag = []cli.Flag{
 //	var remoteCmd = &cli.Command{
 //		Name:  "remote",
 //		Usage: "Manages the local pallet's relationship to the remote source",
-//		Subcommands: []*cli.Command{
+//		Commands: []*cli.Command{
 //			{
 //				Name:  "set",
 //				Usage: "Sets the remote source for the local pallet",
@@ -618,7 +618,7 @@ func makeModifyFileSubcmds() []*cli.Command {
 				&cli.StringFlag{
 					Name:    "editor",
 					Usage:   "Path of text editor",
-					EnvVars: []string{"EDITOR"},
+					Sources: cli.EnvVars("EDITOR"),
 				},
 			},
 		},

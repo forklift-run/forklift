@@ -4,7 +4,7 @@ package stage
 import (
 	"slices"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 type Versions struct {
@@ -17,7 +17,7 @@ func MakeCmd(versions Versions) *cli.Command {
 	return &cli.Command{
 		Name:  "stage",
 		Usage: "Manages the local stage store",
-		Subcommands: slices.Concat(
+		Commands: slices.Concat(
 			makeUseSubcmds(versions),
 			makeQuerySubcmds(versions),
 			makeModifySubcmds(versions),

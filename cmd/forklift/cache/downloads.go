@@ -1,20 +1,21 @@
 package cache
 
 import (
+	"context"
 	"fmt"
 	"io/fs"
 	"os"
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/pkg/errors"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	fws "github.com/forklift-run/forklift/exp/workspaces"
 )
 
 // ls-dl
 
-func lsDlAction(c *cli.Context) error {
+func lsDlAction(ctx context.Context, c *cli.Command) error {
 	workspace, err := fws.LoadWorkspace(c.String("workspace"))
 	if err != nil {
 		return err
@@ -46,7 +47,7 @@ func lsDlAction(c *cli.Context) error {
 
 // del-dl
 
-func delDlAction(c *cli.Context) error {
+func delDlAction(ctx context.Context, c *cli.Command) error {
 	workspace, err := fws.LoadWorkspace(c.String("workspace"))
 	if err != nil {
 		return err

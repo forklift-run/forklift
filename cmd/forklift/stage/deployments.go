@@ -1,11 +1,12 @@
 package stage
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	"github.com/pkg/errors"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	fcli "github.com/forklift-run/forklift/internal/app/forklift/cli"
 )
@@ -13,7 +14,7 @@ import (
 // show-bun-depl
 
 func showBunDeplAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		store, err := getStageStore(c.String("workspace"), c.String("stage-store"), versions)
 		if err != nil {
 			return err
@@ -42,7 +43,7 @@ func showBunDeplAction(versions Versions) cli.ActionFunc {
 // locate-bun-depl-pkg
 
 func locateBunDeplPkgAction(versions Versions) cli.ActionFunc {
-	return func(c *cli.Context) error {
+	return func(ctx context.Context, c *cli.Command) error {
 		store, err := getStageStore(c.String("workspace"), c.String("stage-store"), versions)
 		if err != nil {
 			return err

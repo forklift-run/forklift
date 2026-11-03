@@ -1,13 +1,14 @@
 package cache
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"slices"
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	"github.com/forklift-run/forklift/exp/caching"
 	fpkg "github.com/forklift-run/forklift/exp/packaging"
@@ -16,7 +17,7 @@ import (
 
 // ls-pkg
 
-func lsPkgAction(c *cli.Context) error {
+func lsPkgAction(ctx context.Context, c *cli.Command) error {
 	cache, err := getPalletCache(c.String("workspace"), false)
 	if err != nil {
 		return err
@@ -40,7 +41,7 @@ func lsPkgAction(c *cli.Context) error {
 
 // show-pkg
 
-func showPkgAction(c *cli.Context) error {
+func showPkgAction(ctx context.Context, c *cli.Command) error {
 	cache, err := getPalletCache(c.String("workspace"), false)
 	if err != nil {
 		return err
