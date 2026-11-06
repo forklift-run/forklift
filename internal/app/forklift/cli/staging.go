@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"path"
 
@@ -258,7 +259,7 @@ func applyChangesConcurrently(
 				<-changeDone[dep]
 			}
 			if err := applyReconciliationChange(
-				context.Background(), indent, change, envVars, dc,
+				context.Background(), indent, change, maps.Clone(envVars), dc,
 			); err != nil {
 				return errors.Wrapf(err, "couldn't apply change '%s'", change.PlanString())
 			}

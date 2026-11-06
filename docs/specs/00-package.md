@@ -1113,7 +1113,7 @@ This optional field of the `provides` subsection is an array of file export obje
 
 - This field is optional.
 
-- A file export is defined as a source path and a target path. A file export will overlap with another file export if and only if both file exports have overlapping target paths (for a definition of overlapping paths, refer below to description of the `path` field of the file export object).
+- A file export is defined as a source path and a target path. A file export will overlap with another file export if and only if both file exports have overlapping target paths (for a definition of overlapping paths, refer below to description of the `target` field of the file export object).
 
 - Each file export object describes a file export resource which may or may not be in conflict with other file export resources; this is because multiple file exports are not allowed to have overlapping target paths.
 
