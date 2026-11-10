@@ -29,7 +29,7 @@ func CacheAllReqs(
 		indent, os.Stderr, "Downloading Docker container images to be deployed by the local pallet...",
 	)
 	if err := DownloadImages(
-		ctx, 1, pallet, palletCacheWithMerged, platform, includeDisabled, parallel,
+		ctx, 1, pallet, palletCacheWithMerged, platform, includeDisabled, parallel, true,
 	); err != nil {
 		return err
 	}

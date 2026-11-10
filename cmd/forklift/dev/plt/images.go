@@ -55,7 +55,7 @@ func cacheImgAction(versions Versions) cli.ActionFunc {
 		)
 		if err := fcli.DownloadImages(
 			ctx, 0, plt, caches.pmp,
-			c.String("platform"), c.Bool("include-disabled"), c.Bool("parallel"),
+			c.String("platform"), c.Bool("include-disabled"), c.Bool("parallel"), true,
 		); err != nil {
 			return err
 		}

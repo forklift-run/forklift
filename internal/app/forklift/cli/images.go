@@ -47,7 +47,9 @@ func DownloadImagesForStoreApply(
 			"Downloading Docker container images specified by the last successfully-applied staged "+
 				"pallet bundle, in case the next to be applied fails to be applied...",
 		)
-		if err := DownloadImages(ctx, indent+1, bundle, bundle, platform, false, parallel); err != nil {
+		if err := DownloadImages(
+			ctx, indent+1, bundle, bundle, platform, false, parallel, false,
+		); err != nil {
 			return err
 		}
 	}
@@ -66,7 +68,9 @@ func DownloadImagesForStoreApply(
 			"Downloading Docker container images specified by the next staged pallet bundle to be "+
 				"applied...",
 		)
-		if err := DownloadImages(ctx, indent+1, bundle, bundle, platform, false, parallel); err != nil {
+		if err := DownloadImages(
+			ctx, indent+1, bundle, bundle, platform, false, parallel, false,
+		); err != nil {
 			return err
 		}
 		fmt.Fprintln(os.Stderr)
@@ -77,7 +81,7 @@ func DownloadImagesForStoreApply(
 func DownloadImages(
 	ctx context.Context, indent int,
 	deplsLoader ResolvedDeplsLoader, pkgLoader fplt.FSPkgLoader,
-	platform string, includeDisabled, parallel bool,
+	platform string, includeDisabled, parallel, forcePull bool,
 ) error {
 	orderedImages, err := forklift.ListRequiredImages(deplsLoader, pkgLoader, includeDisabled)
 	if err != nil {
@@ -95,46 +99,56 @@ func DownloadImages(
 	}
 
 	if !parallel {
-		return downloadImagesSerial(ctx, indent, orderedImages, platform, dc)
+		return downloadImagesSerial(ctx, indent, orderedImages, platform, dc, forcePull)
 	}
-	return downloadImagesParallel(ctx, indent, orderedImages, platform, dc)
+	return downloadImagesParallel(ctx, indent, orderedImages, platform, dc, forcePull)
 }
 
 func downloadImagesSerial(
 	ctx context.Context,
-	indent int, images []string, platform string, dc *docker.Client,
+	indent int, images []string, platform string, dc *docker.Client, forcePull bool,
 ) error {
 	p := newProgress(len(images))
 	for _, image := range images {
-		unpinned, hash := splitImage(image)
-		if hash == "" {
+		unpinned, digest := splitImage(image)
+		mustPull := true
+		if digest == "" {
 			IndentedFprintf(indent, os.Stderr, "%s Downloading %s...\n", p.Render(p.Get()), image)
 		} else {
 			IndentedFprintf(indent, os.Stderr, "%s Downloading %s...\n", p.Render(p.Get()), unpinned)
 			IndentedFprintf(indent+1, os.Stderr, "Full image:")
 			IndentedFprintf(p.RenderWidth()/len(indentation), os.Stderr, " %s\n", image)
+			if _, err := dc.InspectImage(ctx, image); err == nil {
+				IndentedFprintln(
+					indent+1, os.Stderr, "Digest-pinned image appears to have been downloaded already",
+				)
+				mustPull = forcePull
+			}
 		}
 
-		out := docker.NewOutStream(os.Stderr)
-		_, isTerminal := term.GetFdInfo(os.Stderr)
-		if err := dc.PullImage(
-			ctx, image, platform, out,
-			jsonmessage.WithMessagePrinter(indentedMessagePrinter(indent+1, isTerminal, 0)),
-		); err != nil {
-			return errors.Wrapf(err, "couldn't download %s", image)
+		if mustPull {
+			out := docker.NewOutStream(os.Stderr)
+			_, isTerminal := term.GetFdInfo(os.Stderr)
+			if err := dc.PullImage(
+				ctx, image, platform, out,
+				jsonmessage.WithMessagePrinter(indentedMessagePrinter(indent+1, isTerminal, 0)),
+			); err != nil {
+				return errors.Wrapf(err, "couldn't download %s", image)
+			}
+			IndentedFprintln(indent+1, os.Stderr, "Finished download")
 		}
-		IndentedFprintln(indent+1, os.Stderr, "Finished download")
+
 		p.Increment()
 	}
 	return nil
 }
 
-func splitImage(image string) (unpinned, hash string) {
-	unpinned, hash, ok := strings.Cut(image, "@sha256:")
+func splitImage(image string) (unpinned, digest string) {
+	unpinned, digest, ok := strings.Cut(image, "@sha256:")
 	if !ok {
 		return image, ""
 	}
-	return unpinned, hash
+	return unpinned, digest
 }
 
 type progress struct {
@@ -292,7 +306,7 @@ func cursorDown(out io.Writer, l uint) {
 
 func downloadImagesParallel(
 	ctx context.Context,
-	indent int, images []string, platform string, dc *docker.Client,
+	indent int, images []string, platform string, dc *docker.Client, forcePull bool,
 ) error {
 	eg, egctx := errgroup.WithContext(ctx)
 	p := newProgress(len(images))
@@ -300,28 +314,38 @@ func downloadImagesParallel(
 	pl := &sync.Mutex{}
 	for _, image := range images {
 		eg.Go(func() error {
-			unpinned, hash := splitImage(image)
+			unpinned, digest := splitImage(image)
 			headerImage := image
-			if hash != "" {
+			if digest != "" {
 				headerImage = unpinned
 			}
 			batcher := newMessageBatcher(m, pl, func() string {
 				return fmt.Sprintf("%s Downloading %s...", p.Render(p.Get()), headerImage)
 			})
-			if hash != "" {
+			mustPull := true
+			if digest != "" {
 				buf := bytes.Buffer{}
 				fmt.Fprintf(&buf, "Full image:")
 				IndentedFprintf(p.RenderWidth()/len(indentation), &buf, " %s\n", image)
 				batcher.Add(jsonstream.Message{Stream: buf.String()})
+				if _, err := dc.InspectImage(ctx, image); err == nil {
+					batcher.Add(jsonstream.Message{
+						Stream: "Digest-pinned image appears to have been downloaded already\n",
+					})
+					mustPull = forcePull
+				}
 			}
 
-			out := docker.NewOutStream(os.Stderr)
-			_, isTerminal := term.GetFdInfo(os.Stderr)
-			if err := dc.PullImage(
-				egctx, image, platform, out,
-				jsonmessage.WithMessagePrinter(batcher.PrintBatched(indent, isTerminal, 0)),
-			); err != nil {
-				return errors.Wrapf(err, "couldn't download %s", image)
+			if mustPull {
+				out := docker.NewOutStream(os.Stderr)
+				_, isTerminal := term.GetFdInfo(os.Stderr)
+				if err := dc.PullImage(
+					egctx, image, platform, out,
+					jsonmessage.WithMessagePrinter(batcher.PrintBatched(indent, isTerminal, 0)),
+				); err != nil {
+					return errors.Wrapf(err, "couldn't download %s", image)
+				}
+				batcher.Add(jsonstream.Message{Stream: "Finished download\n"})
 			}
 
 			if err := batcher.PrintRemaining(indent, 0); err != nil {
@@ -478,6 +502,5 @@ func (b *messageBatcher) PrintRemaining(indent int, width uint16) error {
 			return err
 		}
 	}
-	IndentedFprintln(indent+1, os.Stderr, "Finished download")
 	return nil
 }
