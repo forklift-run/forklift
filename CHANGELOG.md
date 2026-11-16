@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - (Breaking change; lib) All packages in `/pkg` have been reorganized and moved into `/exp` (i.e. experimental libraries whose API surfaces haven't been stabilized yet).
 - (cli) `[dev] plt plan`/`stage plan` now prunes redundant transitive dependencies between changes before displaying and executing changes.
 - (cli) Image-caching operations (e.g. with `--parallel=false [dev] plt cache-img`) now print live progress updates in terminals, just like with `docker pull`.
+- (cli) `[dev] plt stage`, `[dev] plt apply`, and `stage set-next` no longer attempt to re-pull Docker images which are already sha256-hash pinned and appear to be already fully downloaded.
 
 ### Removed
 
